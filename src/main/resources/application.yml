@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: booking
+  web:
+    locale: pt-BR
+    locale-resolver: fixed
+  datasource:
+    url: jdbc:postgresql://localhost:5432/booking
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: true
+
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    br.com.alura.booking: DEBUG
