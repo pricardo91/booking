@@ -1,0 +1,6 @@
+# Normaliza os fins de linha. Os scripts do Maven Wrapper precisam de LF no Linux
+# (Docker e CI); o .cmd precisa de CRLF no Windows.
+* text=auto
+mvnw text eol=lf
+*.cmd text eol=crlf
+*.sh text eol=lf
