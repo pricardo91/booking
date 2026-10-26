@@ -13,11 +13,11 @@ import lombok.ToString;
 public class SalaRequest {
 
     @NotBlank(message = "O nome da sala é obrigatório.")
-    @Size(min = 3, max = 100, message = "O nome deve ter no máximo 100 caracteres.")
+    @Size(min = 3, max = 100, message = "O nome deve ter entre {min} e {max} caracteres.")
     private String nome;
 
     @NotNull(message = "A capacidade é obrigatória.")
-    @Min(value = 1)
-    @Max(value = 50)
+    @Min(value = 1, message = "A capacidade deve ser no mínimo {value}.")
+    @Max(value = 50, message = "A capacidade deve ser no máximo {value}.")
     private Integer capacidade;
 }
