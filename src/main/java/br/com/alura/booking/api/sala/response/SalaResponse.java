@@ -10,12 +10,12 @@ public class SalaResponse {
     private final Long id;
     private final String nome;
     private final Integer capacidade;
-    private final StatusSala statusSala;
+    private final StatusSala status;
 
     public SalaResponse(Sala sala) {
         this.id = sala.getId();
         this.nome = sala.getNome();
         this.capacidade = sala.getCapacidade();
-        this.statusSala = sala.getStatus();
+        this.status = sala.getStatus();
     }
 }

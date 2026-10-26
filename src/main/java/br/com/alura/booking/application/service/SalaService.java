@@ -11,7 +11,7 @@ public interface SalaService {
 
     Page<Sala> listaSalas(Pageable pageable);
 
-    SalaResponse buscaSala(long id);
+    SalaResponse buscaSalaPorId(long id);
 
     void atualizaSala(long id);
 

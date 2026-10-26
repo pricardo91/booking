@@ -20,7 +20,7 @@ public interface SalaAPI {
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "15") int size);
 
     @GetMapping("/{id}")
-    SalaResponse buscaSala(@PathVariable long id);
+    SalaResponse buscaSalaPorId(@PathVariable long id);
 
     @PutMapping("/{id}")
     void atualizaSala(@PathVariable long id, @Valid @RequestBody SalaRequest atualizaSala);

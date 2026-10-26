@@ -38,9 +38,9 @@ public class SalaController implements SalaAPI {
     }
 
     @Override
-    public SalaResponse buscaSala(long id) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - buscaSala");
-        SalaResponse response = salaService.buscaSala(id);
+    public SalaResponse buscaSalaPorId(long id) {
+        log.debug("[start] - " + getClass().getSimpleName() + " - buscaSalaPorId");
+        SalaResponse response = salaService.buscaSalaPorId(id);
         return response;
     }
 
