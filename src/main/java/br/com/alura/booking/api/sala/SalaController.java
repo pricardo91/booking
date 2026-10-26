@@ -5,12 +5,12 @@ import br.com.alura.booking.api.sala.response.PageResponse;
 import br.com.alura.booking.api.sala.response.SalaResponse;
 import br.com.alura.booking.api.sala.response.SalaResumoResponse;
 import br.com.alura.booking.application.service.SalaService;
-import br.com.alura.booking.domain.Sala;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,46 +22,45 @@ public class SalaController implements SalaAPI {
 
     @Override
     public SalaResponse cadastraSala(SalaRequest novaSala) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - cadastraSala");
+        log.debug("[start] - {} - cadastraSala", getClass().getSimpleName());
         SalaResponse salaNova = salaService.cadastraSala(novaSala);
-        log.debug("[finish] - " + getClass().getSimpleName() + " - cadastraSala");
+        log.debug("[finish] - {} - cadastraSala", getClass().getSimpleName());
         return salaNova;
     }
 
     @Override
     public PageResponse<SalaResumoResponse> listaSala(int page, int size) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - listaSala");
-        Page<Sala> salas = salaService.listaSalas(PageRequest.of(page, size));
-        Page<SalaResumoResponse> response = salas.map(SalaResumoResponse::new);
-        log.debug("[finish] - " + getClass().getSimpleName() + " - listaSala");
-        return PageResponse.from(response);
+        log.debug("[start] - {} - listaSala", getClass().getSimpleName());
+        Page<SalaResumoResponse> salaPaginada = salaService.listaSalas(PageRequest.of(page, size, Sort.by("nome")));
+        log.debug("[finish] - {} - listaSala", getClass().getSimpleName());
+        return PageResponse.from(salaPaginada);
     }
 
     @Override
     public SalaResponse buscaSalaPorId(long id) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - buscaSalaPorId");
+        log.debug("[start] - {} - buscaSalaPorId", getClass().getSimpleName());
         SalaResponse response = salaService.buscaSalaPorId(id);
         return response;
     }
 
     @Override
     public void atualizaSala(long id, @Valid SalaRequest atualizaSala) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - atualizaSala");
+        log.debug("[start] - {} - atualizaSala", getClass().getSimpleName());
         salaService.atualizaSala(id);
-        log.debug("[finish] - " + getClass().getSimpleName() + " - atualizaSala");
+        log.debug("[finish] - {} - atualizaSala", getClass().getSimpleName());
     }
 
     @Override
     public void inativaSala(long id) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - inativaSala");
+        log.debug("[start] - {} - inativaSala", getClass().getSimpleName());
         salaService.inativaSala(id);
-        log.debug("[finish] - " + getClass().getSimpleName() + " - inativaSala");
+        log.debug("[finish] - {} - inativaSala", getClass().getSimpleName());
     }
 
     @Override
     public void ativaSala(long id) {
-        log.debug("[start] - " + getClass().getSimpleName() + " - ativaSala");
+        log.debug("[start] - {} - ativaSala", getClass().getSimpleName());
         salaService.ativaSala(id);
-        log.debug("[finish] - " + getClass().getSimpleName() + " - ativaSala");
+        log.debug("[finish] - {} - ativaSala", getClass().getSimpleName());
     }
 }

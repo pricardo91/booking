@@ -1,6 +1,8 @@
 package br.com.alura.booking.application.repository;
 
 import br.com.alura.booking.domain.Sala;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface SalaRepository {
 
@@ -9,4 +11,6 @@ public interface SalaRepository {
     boolean existeSalaPorNome(String nome);
 
     Sala buscaSalaPorId(long id);
+
+    Page<Sala> listaSalas(Pageable pageable);
 }

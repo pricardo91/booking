@@ -6,6 +6,8 @@ import br.com.alura.booking.exception.CodigoErro;
 import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -37,5 +39,13 @@ public class SalaInfraRepository implements SalaRepository {
                 .orElseThrow(() -> new NegocioException(CodigoErro.SALA_NAO_ENCONTRADA, String.valueOf(id)));
         log.debug("[finish] - {} - buscaSalaPorId", getClass().getSimpleName());
         return sala;
+    }
+
+    @Override
+    public Page<Sala> listaSalas(Pageable pageable) {
+        log.debug("[start] - {} - listaSalas", getClass().getSimpleName());
+        Page<Sala> salas = salaJPARepository.findAll(pageable);
+        log.debug("[finish] - {} - listaSalas", getClass().getSimpleName());
+        return salas;
     }
 }
