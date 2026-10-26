@@ -4,11 +4,10 @@ import br.com.alura.booking.exception.CodigoErro;
 import br.com.alura.booking.exception.NegocioException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * Espaço físico que pode ser reservado. É o recurso disputado pelas reservas: a regra de não
@@ -76,8 +75,8 @@ public class Sala {
      * @throws NegocioException (SALA_CAPACIDADE_INVALIDA) se a capacidade não for positiva
      */
     public Sala(String nome, int capacidade) {
-        this.nome = nome;
         setCapacidade(capacidade);
+        this.nome = nome;
     }
 
     /**
