@@ -67,7 +67,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail tratarIntegridade(DataIntegrityViolationException ex) {
-        log.warn("Violação de integridade no banco: {}", ex.getMostSpecificCause().getMessage());
+        log.warn(
+                "Violação de integridade no banco: {}",
+                ex.getMostSpecificCause().getMessage());
         return problema(HttpStatus.CONFLICT, texto(TITULO_CONFLITO_DE_DADOS), texto(CONFLITO_DE_DADOS));
     }
 

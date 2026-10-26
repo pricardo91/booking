@@ -61,13 +61,17 @@ class ReservaTest {
     @Test
     void recusaUsuarioNulo() {
         assertErro(
-                () -> new Reserva(null, salaValida(), as("10:00"), as("11:00")), CodigoErro.CAMPO_OBRIGATORIO, "usuário");
+                () -> new Reserva(null, salaValida(), as("10:00"), as("11:00")),
+                CodigoErro.CAMPO_OBRIGATORIO,
+                "usuário");
     }
 
     @Test
     void recusaSalaNula() {
         assertErro(
-                () -> new Reserva(usuarioValido(), null, as("10:00"), as("11:00")), CodigoErro.CAMPO_OBRIGATORIO, "sala");
+                () -> new Reserva(usuarioValido(), null, as("10:00"), as("11:00")),
+                CodigoErro.CAMPO_OBRIGATORIO,
+                "sala");
     }
 
     @Test

@@ -56,7 +56,8 @@ class MensagensDeErroTest {
 
     @Test
     void asChavesDosCodigosDeErroNaoSeRepetem() {
-        Set<String> chaves = Arrays.stream(CodigoErro.values()).map(CodigoErro::getChave).collect(Collectors.toSet());
+        Set<String> chaves =
+                Arrays.stream(CodigoErro.values()).map(CodigoErro::getChave).collect(Collectors.toSet());
 
         assertThat(chaves).hasSize(CodigoErro.values().length);
     }
