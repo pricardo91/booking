@@ -7,4 +7,6 @@ public interface SalaRepository {
     Sala salva(Sala sala);
 
     boolean existeSalaPorNome(String nome);
+
+    Sala buscaSalaPorId(long id);
 }

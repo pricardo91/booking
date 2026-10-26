@@ -44,9 +44,11 @@ public class SalaServiceImpl implements SalaService {
     }
 
     @Override
-    public SalaResponse buscaSala(long id) {
-        log.debug("[start] - {} - buscaSala", getClass().getSimpleName());
-        return null;
+    @Transactional(readOnly = true)
+    public SalaResponse buscaSalaPorId(long id) {
+        log.debug("[start] - {} - buscaSalaPorId", getClass().getSimpleName());
+        Sala sala = salaRepository.buscaSalaPorId(id);
+        return new SalaResponse(sala);
     }
 
     @Override

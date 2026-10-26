@@ -2,6 +2,8 @@ package br.com.alura.booking.infra;
 
 import br.com.alura.booking.application.repository.SalaRepository;
 import br.com.alura.booking.domain.Sala;
+import br.com.alura.booking.exception.CodigoErro;
+import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -23,6 +25,17 @@ public class SalaInfraRepository implements SalaRepository {
 
     @Override
     public boolean existeSalaPorNome(String nome) {
+        log.debug("[start] - {} - existeSalaPorNome", getClass().getSimpleName());
         return salaJPARepository.existsByNomeIgnoreCase(nome);
+    }
+
+    @Override
+    public Sala buscaSalaPorId(long id) {
+        log.debug("[start] - {} - buscaSalaPorId", getClass().getSimpleName());
+        Sala sala = salaJPARepository
+                .findById(id)
+                .orElseThrow(() -> new NegocioException(CodigoErro.SALA_NAO_ENCONTRADA, String.valueOf(id)));
+        log.debug("[finish] - {} - buscaSalaPorId", getClass().getSimpleName());
+        return sala;
     }
 }
