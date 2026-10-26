@@ -2,23 +2,39 @@ package br.com.alura.booking.application.service;
 
 import br.com.alura.booking.api.sala.request.SalaRequest;
 import br.com.alura.booking.api.sala.response.SalaResponse;
+import br.com.alura.booking.application.repository.SalaRepository;
 import br.com.alura.booking.domain.Sala;
+import br.com.alura.booking.exception.CodigoErro;
+import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class SalaServiceImpl implements SalaService {
+
+    private final SalaRepository salaRepository;
+
     @Override
+    @Transactional
     public SalaResponse cadastraSala(SalaRequest novaSala) {
         log.debug("[start] - {} - cadastraSala", getClass().getSimpleName());
+        var nomeLimpo = novaSala.getNome().strip();
+
+        if (salaRepository.existeSalaPorNome(nomeLimpo)) {
+            throw new NegocioException(CodigoErro.SALA_NOME_DUPLICADO, nomeLimpo);
+        }
+
+        Sala salaCriada = salaRepository.salva(new Sala(nomeLimpo, novaSala.getCapacidade()));
+        SalaResponse salaResponse = new SalaResponse(salaCriada);
         log.debug("[finish] - {} - cadastraSala", getClass().getSimpleName());
 
-        return null;
+        return salaResponse;
     }
 
     @Override
