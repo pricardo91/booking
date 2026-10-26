@@ -5,6 +5,8 @@ import br.com.alura.booking.api.sala.response.PageResponse;
 import br.com.alura.booking.api.sala.response.SalaResponse;
 import br.com.alura.booking.api.sala.response.SalaResumoResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +19,8 @@ public interface SalaAPI {
 
     @GetMapping
     PageResponse<SalaResumoResponse> listaSala(
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "15") int size);
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size);
 
     @GetMapping("/{id}")
     SalaResponse buscaSalaPorId(@PathVariable long id);

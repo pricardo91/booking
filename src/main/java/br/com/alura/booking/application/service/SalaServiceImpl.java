@@ -2,6 +2,7 @@ package br.com.alura.booking.application.service;
 
 import br.com.alura.booking.api.sala.request.SalaRequest;
 import br.com.alura.booking.api.sala.response.SalaResponse;
+import br.com.alura.booking.api.sala.response.SalaResumoResponse;
 import br.com.alura.booking.application.repository.SalaRepository;
 import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.exception.CodigoErro;
@@ -38,9 +39,11 @@ public class SalaServiceImpl implements SalaService {
     }
 
     @Override
-    public Page<Sala> listaSalas(Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<SalaResumoResponse> listaSalas(Pageable pageable) {
         log.debug("[start] - {} - listaSalas", getClass().getSimpleName());
-        return Page.empty();
+        Page<Sala> salas = salaRepository.listaSalas(pageable);
+        return salas.map(SalaResumoResponse::new);
     }
 
     @Override
