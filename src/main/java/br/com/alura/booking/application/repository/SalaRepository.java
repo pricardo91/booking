@@ -13,4 +13,6 @@ public interface SalaRepository {
     Sala buscaSalaPorId(long id);
 
     Page<Sala> listaSalas(Pageable pageable);
+
+    boolean existeOutraSalaPorNome(String nome, long id);
 }

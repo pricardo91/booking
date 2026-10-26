@@ -48,4 +48,10 @@ public class SalaInfraRepository implements SalaRepository {
         log.debug("[finish] - {} - listaSalas", getClass().getSimpleName());
         return salas;
     }
+
+    @Override
+    public boolean existeOutraSalaPorNome(String nome, long id) {
+        log.debug("[start] - {} - existeOutraSalaPorNome", getClass().getSimpleName());
+        return salaJPARepository.existsByNomeIgnoreCaseAndIdNot(nome, id);
+    }
 }

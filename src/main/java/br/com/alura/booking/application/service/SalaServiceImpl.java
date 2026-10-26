@@ -55,8 +55,20 @@ public class SalaServiceImpl implements SalaService {
     }
 
     @Override
-    public void atualizaSala(long id) {
+    @Transactional
+    public void atualizaSala(long id, SalaRequest atualizaSala) {
         log.debug("[start] - {} - atualizaSala", getClass().getSimpleName());
+
+        var nomeLimpo = atualizaSala.getNome().strip();
+        Sala sala = salaRepository.buscaSalaPorId(id);
+
+        if (salaRepository.existeOutraSalaPorNome(nomeLimpo, id)) {
+            throw new NegocioException(CodigoErro.SALA_NOME_DUPLICADO, nomeLimpo);
+        }
+
+        sala.atualizarSala(nomeLimpo, atualizaSala.getCapacidade());
+
+        salaRepository.salva(sala);
         log.debug("[finish] - {} - atualizaSala", getClass().getSimpleName());
     }
 
