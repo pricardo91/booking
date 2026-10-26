@@ -12,7 +12,7 @@ public class SalaResumoResponse {
     private Long id;
     private String nome;
     private Integer capacidade;
-    private StatusSala statusSala;
+    private StatusSala status;
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime dataCriacao;
@@ -24,7 +24,7 @@ public class SalaResumoResponse {
         this.id = sala.getId();
         this.nome = sala.getNome();
         this.capacidade = sala.getCapacidade();
-        this.statusSala = sala.getStatus();
+        this.status = sala.getStatus();
         this.dataCriacao = sala.getCadastradoEm();
         this.dataEdicao = sala.getAtualizadoEm();
     }
