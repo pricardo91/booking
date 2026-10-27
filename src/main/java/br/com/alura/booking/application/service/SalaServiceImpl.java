@@ -8,7 +8,7 @@ import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.exception.CodigoErro;
 import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class SalaServiceImpl implements SalaService {
 
     private final SalaRepository salaRepository;
