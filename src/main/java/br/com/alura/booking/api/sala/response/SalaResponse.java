@@ -2,9 +2,11 @@ package br.com.alura.booking.api.sala.response;
 
 import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.domain.StatusSala;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 
 @Getter
+@JsonPropertyOrder({"id", "nome", "capacidade", "status"})
 public class SalaResponse {
 
     private final Long id;

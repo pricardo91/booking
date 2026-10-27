@@ -26,11 +26,14 @@ public interface SalaAPI {
     SalaResponse buscaSalaPorId(@PathVariable long id);
 
     @PutMapping("/{id}")
-    void atualizaSala(@PathVariable long id, @Valid @RequestBody SalaRequest atualizaSala);
+    @ResponseStatus(HttpStatus.OK)
+    SalaResponse atualizaSala(@PathVariable long id, @Valid @RequestBody SalaRequest atualizaSala);
 
     @PatchMapping("/{id}/inativar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     void inativaSala(@PathVariable long id);
 
     @PatchMapping("/{id}/ativar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     void ativaSala(@PathVariable long id);
 }

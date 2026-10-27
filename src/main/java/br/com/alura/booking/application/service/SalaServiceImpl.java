@@ -8,7 +8,7 @@ import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.exception.CodigoErro;
 import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class SalaServiceImpl implements SalaService {
 
     private final SalaRepository salaRepository;
@@ -56,7 +56,7 @@ public class SalaServiceImpl implements SalaService {
 
     @Override
     @Transactional
-    public void atualizaSala(long id, SalaRequest atualizaSala) {
+    public SalaResponse atualizaSala(long id, SalaRequest atualizaSala) {
         log.debug("[start] - {} - atualizaSala", getClass().getSimpleName());
 
         var nomeLimpo = atualizaSala.getNome().strip();
@@ -68,19 +68,26 @@ public class SalaServiceImpl implements SalaService {
 
         sala.atualizarSala(nomeLimpo, atualizaSala.getCapacidade());
 
-        salaRepository.salva(sala);
+        sala = salaRepository.salva(sala);
         log.debug("[finish] - {} - atualizaSala", getClass().getSimpleName());
+        return new SalaResponse(sala);
     }
 
     @Override
+    @Transactional
     public void inativaSala(long id) {
         log.debug("[start] - {} - inativaSala", getClass().getSimpleName());
+        Sala sala = salaRepository.buscaSalaPorId(id);
+        sala.inativar();
         log.debug("[finish] - {} - inativaSala", getClass().getSimpleName());
     }
 
     @Override
+    @Transactional
     public void ativaSala(long id) {
         log.debug("[start] - {} - ativaSala", getClass().getSimpleName());
+        var sala = salaRepository.buscaSalaPorId(id);
+        sala.ativar();
         log.debug("[finish] - {} - ativaSala", getClass().getSimpleName());
     }
 }
