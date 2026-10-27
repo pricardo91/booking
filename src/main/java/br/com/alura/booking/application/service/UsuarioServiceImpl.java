@@ -39,4 +39,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         log.debug("[finish] - {} - cadastraUsuario", getClass().getSimpleName());
         return usuarioResponse;
     }
+
+    @Override
+    public UsuarioResponse buscaUsuarioPorId(Long id) {
+        log.debug("[start] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        Usuario usuario = usuarioRepository.buscaUsuarioPorId(id);
+        UsuarioResponse usuarioResponse = new UsuarioResponse(usuario);
+        log.debug("[finish] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        return usuarioResponse;
+    }
 }
