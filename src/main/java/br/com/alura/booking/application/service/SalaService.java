@@ -13,7 +13,7 @@ public interface SalaService {
 
     SalaResponse buscaSalaPorId(long id);
 
-    void atualizaSala(long id, SalaRequest atualizaSala);
+    SalaResponse atualizaSala(long id, SalaRequest atualizaSala);
 
     void inativaSala(long id);
 

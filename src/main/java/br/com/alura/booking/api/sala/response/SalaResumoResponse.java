@@ -3,10 +3,12 @@ package br.com.alura.booking.api.sala.response;
 import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.domain.StatusSala;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
+@JsonPropertyOrder({"id", "nome", "capacidade", "status", "dataCriacao", "dataEdicao"})
 public class SalaResumoResponse {
 
     private Long id;

@@ -44,10 +44,11 @@ public class SalaController implements SalaAPI {
     }
 
     @Override
-    public void atualizaSala(long id, @Valid SalaRequest atualizaSala) {
+    public SalaResponse atualizaSala(long id, @Valid SalaRequest atualizaSala) {
         log.debug("[start] - {} - atualizaSala", getClass().getSimpleName());
-        salaService.atualizaSala(id, atualizaSala);
+        SalaResponse salaResponse = salaService.atualizaSala(id, atualizaSala);
         log.debug("[finish] - {} - atualizaSala", getClass().getSimpleName());
+        return salaResponse;
     }
 
     @Override
