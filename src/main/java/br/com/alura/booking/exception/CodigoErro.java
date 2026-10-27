@@ -44,7 +44,13 @@ public enum CodigoErro {
     RESERVA_NAO_ENCONTRADA("reserva.nao.encontrada", CategoriaErro.NAO_ENCONTRADO),
 
     /** Argumento: o id do usuário. */
-    USUARIO_NAO_ENCONTRADO("usuario.nao.encontrado", CategoriaErro.NAO_ENCONTRADO);
+    USUARIO_NAO_ENCONTRADO("usuario.nao.encontrado", CategoriaErro.NAO_ENCONTRADO),
+
+    /** Argumento: o e-mail. */
+    USUARIO_EMAIL_DUPLICADO("usuario.email.duplicado", CategoriaErro.CONFLITO),
+
+    /** Sem argumento: o CPF é dado pessoal e não deve aparecer na resposta. */
+    USUARIO_CPF_DUPLICADO("usuario.cpf.duplicado", CategoriaErro.CONFLITO);
 
     /** Chave, no messages.properties, do texto deste erro. */
     private final String chave;
