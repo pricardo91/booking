@@ -50,7 +50,11 @@ public enum CodigoErro {
     USUARIO_EMAIL_DUPLICADO("usuario.email.duplicado", CategoriaErro.CONFLITO),
 
     /** Sem argumento: o CPF é dado pessoal e não deve aparecer na resposta. */
-    USUARIO_CPF_DUPLICADO("usuario.cpf.duplicado", CategoriaErro.CONFLITO);
+    USUARIO_CPF_DUPLICADO("usuario.cpf.duplicado", CategoriaErro.CONFLITO),
+
+    USUARIO_JA_ATIVO("usuario.ja.ativo", CategoriaErro.CONFLITO),
+
+    USUARIO_JA_INATIVO("usuario.ja.inativo", CategoriaErro.CONFLITO);
 
     /** Chave, no messages.properties, do texto deste erro. */
     private final String chave;

@@ -1,5 +1,7 @@
 package br.com.alura.booking.domain;
 
+import br.com.alura.booking.exception.CodigoErro;
+import br.com.alura.booking.exception.NegocioException;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -51,6 +53,18 @@ public class Usuario {
     private String cpf;
 
     /**
+     * Indica se o usuário pode fazer reservas novas. Regra de domínio: usuário INATIVO não deve fazer
+     * reservas. Inativar o usuário (em vez de apagá-lo) preserva o histórico das reservas que ele já
+     * fez. Nasce ATIVO. Gravado como texto para não depender da ordem do enum no banco.
+     *
+     * <p>A regra ainda não é aplicada: deve ser conferida no construtor de {@link Reserva}, como já
+     * acontece com a sala inativa.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusUsuario status = StatusUsuario.ATIVO;
+
+    /**
      * Momento do cadastro. Preenchido pelo sistema em onCreation(), nunca pelo cliente, para servir
      * de registro confiável de auditoria.
      */
@@ -86,6 +100,45 @@ public class Usuario {
         atualizadoEm = LocalDateTime.now();
     }
 
+    /**
+     * Volta a poder fazer reservas novas.
+     *
+     * @throws NegocioException (USUARIO_JA_ATIVO) se o usuário já estiver ativo
+     */
+    public void ativar() {
+        if (status != StatusUsuario.INATIVO) {
+            throw new NegocioException(CodigoErro.USUARIO_JA_ATIVO);
+        }
+        this.status = StatusUsuario.ATIVO;
+        this.atualizadoEm = LocalDateTime.now();
+    }
+
+    /**
+     * Deixa de poder fazer reservas novas. As reservas que já existem não são alteradas.
+     *
+     * @throws NegocioException (USUARIO_JA_INATIVO) se o usuário já estiver inativo
+     */
+    public void inativar() {
+        if (status != StatusUsuario.ATIVO) {
+            throw new NegocioException(CodigoErro.USUARIO_JA_INATIVO);
+        }
+        this.status = StatusUsuario.INATIVO;
+        this.atualizadoEm = LocalDateTime.now();
+    }
+
+    /**
+     * Indica se o usuário pode fazer reservas novas.
+     */
+    public boolean isAtivo() {
+        return status == StatusUsuario.ATIVO;
+    }
+
+    /**
+     * Atualiza nome, e-mail e CPF e registra o momento da alteração. O formato dos dados é validado na
+     * entrada da API (DTO); que o e-mail e o CPF não pertençam a outro usuário é conferido pelo
+     * serviço. Os valores chegam já normalizados (nome sem espaços nas pontas, e-mail em minúsculas e
+     * CPF só com dígitos).
+     */
     public void atualizarUsuario(String nomeAtualizado, String emailAtualizado, String cpfAtualizado) {
         this.nome = nomeAtualizado;
         this.email = emailAtualizado;
