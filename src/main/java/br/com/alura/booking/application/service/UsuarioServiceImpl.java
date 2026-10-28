@@ -2,6 +2,7 @@ package br.com.alura.booking.application.service;
 
 import br.com.alura.booking.api.usuario.request.UsuarioRequest;
 import br.com.alura.booking.api.usuario.response.UsuarioResponse;
+import br.com.alura.booking.api.usuario.response.UsuarioResumoResponse;
 import br.com.alura.booking.application.repository.UsuarioRepository;
 import br.com.alura.booking.domain.Usuario;
 import br.com.alura.booking.exception.CodigoErro;
@@ -9,6 +10,8 @@ import br.com.alura.booking.exception.NegocioException;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,11 +44,21 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UsuarioResponse buscaUsuarioPorId(Long id) {
         log.debug("[start] - {} - buscaUsuarioPorId", getClass().getSimpleName());
         Usuario usuario = usuarioRepository.buscaUsuarioPorId(id);
         UsuarioResponse usuarioResponse = new UsuarioResponse(usuario);
         log.debug("[finish] - {} - buscaUsuarioPorId", getClass().getSimpleName());
         return usuarioResponse;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UsuarioResumoResponse> listaUsuarios(Pageable pageable) {
+        log.debug("[start] - {} - listaUsuarios", getClass().getSimpleName());
+        Page<Usuario> usuariosPage = usuarioRepository.listaUsuarios(pageable);
+        log.debug("[finish] - {} - listaUsuarios", getClass().getSimpleName());
+        return usuariosPage.map(UsuarioResumoResponse::new);
     }
 }

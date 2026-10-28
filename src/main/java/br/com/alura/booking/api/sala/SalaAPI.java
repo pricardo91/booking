@@ -1,7 +1,7 @@
 package br.com.alura.booking.api.sala;
 
+import br.com.alura.booking.api.common.PageResponse;
 import br.com.alura.booking.api.sala.request.SalaRequest;
-import br.com.alura.booking.api.sala.response.PageResponse;
 import br.com.alura.booking.api.sala.response.SalaResponse;
 import br.com.alura.booking.api.sala.response.SalaResumoResponse;
 import io.swagger.v3.oas.annotations.Operation;

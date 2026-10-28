@@ -1,7 +1,9 @@
 package br.com.alura.booking.api.usuario;
 
+import br.com.alura.booking.api.common.PageResponse;
 import br.com.alura.booking.api.usuario.request.UsuarioRequest;
 import br.com.alura.booking.api.usuario.response.UsuarioResponse;
+import br.com.alura.booking.api.usuario.response.UsuarioResumoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,6 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.*;
@@ -59,4 +63,27 @@ public interface UsuarioAPI {
             })
     @GetMapping("/{id}")
     UsuarioResponse buscaUsuarioPorId(@PathVariable Long id);
+
+    @Operation(
+            summary = "Listar usuários",
+            description = "Lista os usuários cadastrados de forma paginada, ordenados pelo nome")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Usuários listados com sucesso",
+                        content = @Content(schema = @Schema(implementation = PageResponse.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Parâmetros de paginação inválidos",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @GetMapping
+    PageResponse<UsuarioResumoResponse> listaUsuario(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size);
 }
