@@ -86,4 +86,31 @@ public interface UsuarioAPI {
     PageResponse<UsuarioResumoResponse> listaUsuario(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size);
+
+    @Operation(summary = "Atualizar usuário", description = "Atualiza nome, e-mail e CPF de um usuário cadastrado")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Usuário atualizado com sucesso",
+                        content = @Content(schema = @Schema(implementation = UsuarioResponse.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Request Body inválido ou inexistente!",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Usuário não encontrado",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Já existe outro usuário com este CPF ou e-mail",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @PatchMapping("/{id}")
+    UsuarioResponse atualizaUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioRequest usuarioRequest);
 }

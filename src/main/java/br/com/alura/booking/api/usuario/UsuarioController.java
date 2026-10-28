@@ -43,4 +43,12 @@ public class UsuarioController implements UsuarioAPI {
         log.debug("[finish] - {} - listaUsuario", getClass().getSimpleName());
         return PageResponse.from(usuarioResumoResponses);
     }
+
+    @Override
+    public UsuarioResponse atualizaUsuario(Long id, UsuarioRequest usuarioRequest) {
+        log.debug("[start] - {} - atualizaUsuario", getClass().getSimpleName());
+        UsuarioResponse usuarioAtualizado = usuarioService.atualizaUsuario(id, usuarioRequest);
+        log.debug("[finish] - {} - atualizaUsuario", getClass().getSimpleName());
+        return usuarioAtualizado;
+    }
 }

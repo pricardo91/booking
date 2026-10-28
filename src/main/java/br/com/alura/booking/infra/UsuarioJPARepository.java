@@ -7,4 +7,8 @@ public interface UsuarioJPARepository extends JpaRepository<Usuario, Long> {
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByCpf(String cpf);
+
+    boolean existsByEmailIgnoreCaseAndIdNot(String emailLimpo, Long id);
+
+    boolean existsByCpfAndIdNot(String cpfSoDigitos, Long id);
 }

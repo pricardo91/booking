@@ -112,6 +112,7 @@ public class Sala {
             throw new NegocioException(CodigoErro.SALA_JA_ATIVA);
         }
         this.status = StatusSala.ATIVA;
+        this.atualizadoEm = LocalDateTime.now();
     }
 
     /**
@@ -124,6 +125,7 @@ public class Sala {
             throw new NegocioException(CodigoErro.SALA_JA_INATIVA);
         }
         this.status = StatusSala.INATIVA;
+        this.atualizadoEm = LocalDateTime.now();
     }
 
     /**
@@ -143,6 +145,7 @@ public class Sala {
     public void atualizarSala(String nomeAtualizado, int capacidadeAtualizada) {
         setCapacidade(capacidadeAtualizada);
         this.nome = nomeAtualizado;
+        this.atualizadoEm = LocalDateTime.now();
     }
 
     /**

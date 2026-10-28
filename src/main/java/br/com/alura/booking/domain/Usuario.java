@@ -85,4 +85,11 @@ public class Usuario {
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
+
+    public void atualizarUsuario(String nomeAtualizado, String emailAtualizado, String cpfAtualizado) {
+        this.nome = nomeAtualizado;
+        this.email = emailAtualizado;
+        this.cpf = cpfAtualizado;
+        this.atualizadoEm = LocalDateTime.now();
+    }
 }

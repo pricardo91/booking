@@ -12,4 +12,6 @@ public interface UsuarioService {
     UsuarioResponse buscaUsuarioPorId(Long id);
 
     Page<UsuarioResumoResponse> listaUsuarios(Pageable pageable);
+
+    UsuarioResponse atualizaUsuario(Long id, UsuarioRequest usuarioRequest);
 }

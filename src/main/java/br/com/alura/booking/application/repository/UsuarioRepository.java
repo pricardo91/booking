@@ -14,4 +14,8 @@ public interface UsuarioRepository {
     Usuario buscaUsuarioPorId(Long id);
 
     Page<Usuario> listaUsuarios(Pageable pageable);
+
+    boolean existeOutroUsuarioPorEmail(String emailLimpo, Long id);
+
+    boolean existeOutroUsuarioPorCpf(String cpfSoDigitos, Long id);
 }
