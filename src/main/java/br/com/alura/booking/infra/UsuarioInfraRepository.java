@@ -20,7 +20,7 @@ public class UsuarioInfraRepository implements UsuarioRepository {
     @Override
     public Usuario salva(Usuario usuario) {
         log.debug("[start] - {} - salva", getClass().getSimpleName());
-        var usuarioSalvo = usuarioJPARepository.save(usuario);
+        var usuarioSalvo = usuarioJPARepository.saveAndFlush(usuario);
         log.debug("[finish] - {} - salva", getClass().getSimpleName());
         return usuarioSalvo;
     }
@@ -53,5 +53,17 @@ public class UsuarioInfraRepository implements UsuarioRepository {
         Page<Usuario> usuarios = usuarioJPARepository.findAll(pageable);
         log.debug("[finish] - {} - listaUsuarios", getClass().getSimpleName());
         return usuarios;
+    }
+
+    @Override
+    public boolean existeOutroUsuarioPorEmail(String emailLimpo, Long id) {
+        log.debug("[start] - {} - existeOutroUsuarioPorEmail", getClass().getSimpleName());
+        return usuarioJPARepository.existsByEmailIgnoreCaseAndIdNot(emailLimpo, id);
+    }
+
+    @Override
+    public boolean existeOutroUsuarioPorCpf(String cpfSoDigitos, Long id) {
+        log.debug("[start] - {} - existeOutroUsuarioPorCpf", getClass().getSimpleName());
+        return usuarioJPARepository.existsByCpfAndIdNot(cpfSoDigitos, id);
     }
 }

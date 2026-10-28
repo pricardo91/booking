@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
-@JsonPropertyOrder({"id", "nome", "email", "cadastradoEm"})
+@JsonPropertyOrder({"id", "nome", "email", "cadastradoEm", "atualizadoEm"})
 public class UsuarioResponse {
 
     private final Long id;

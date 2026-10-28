@@ -26,9 +26,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional
     public UsuarioResponse cadastraUsuario(UsuarioRequest novoUsuario) {
         log.debug("[start] - {} - cadastraUsuario", getClass().getSimpleName());
-        var nomeLimpo = novoUsuario.getNome().strip();
-        var emailLimpo = novoUsuario.getEmail().strip().toLowerCase(Locale.ROOT);
-        var cpfSoDigitos = novoUsuario.getCpf().replaceAll("\\D", "");
+        var nomeLimpo = normalizaNome(novoUsuario.getNome());
+        var emailLimpo = normalizaEmail(novoUsuario.getEmail());
+        var cpfSoDigitos = normalizaCpf(novoUsuario.getCpf());
 
         if (usuarioRepository.existeUsuarioPorEmail(emailLimpo)) {
             throw new NegocioException(CodigoErro.USUARIO_EMAIL_DUPLICADO, emailLimpo);
@@ -60,5 +60,45 @@ public class UsuarioServiceImpl implements UsuarioService {
         Page<Usuario> usuariosPage = usuarioRepository.listaUsuarios(pageable);
         log.debug("[finish] - {} - listaUsuarios", getClass().getSimpleName());
         return usuariosPage.map(UsuarioResumoResponse::new);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponse atualizaUsuario(Long id, UsuarioRequest usuarioRequest) {
+        log.debug("[start] - {} - atualizaUsuario", getClass().getSimpleName());
+
+        var nomeLimpo = normalizaNome(usuarioRequest.getNome());
+        var emailLimpo = normalizaEmail(usuarioRequest.getEmail());
+        var cpfSoDigitos = normalizaCpf(usuarioRequest.getCpf());
+
+        Usuario usuario = usuarioRepository.buscaUsuarioPorId(id);
+
+        if (usuarioRepository.existeOutroUsuarioPorEmail(emailLimpo, id)) {
+            throw new NegocioException(CodigoErro.USUARIO_EMAIL_DUPLICADO, emailLimpo);
+        }
+        if (usuarioRepository.existeOutroUsuarioPorCpf(cpfSoDigitos, id)) {
+            throw new NegocioException(CodigoErro.USUARIO_CPF_DUPLICADO, cpfSoDigitos);
+        }
+
+        usuario.atualizarUsuario(nomeLimpo, emailLimpo, cpfSoDigitos);
+
+        usuarioRepository.salva(usuario);
+
+        UsuarioResponse usuarioResponse = new UsuarioResponse(usuario);
+
+        log.debug("[finish] - {} - atualizaUsuario", getClass().getSimpleName());
+        return usuarioResponse;
+    }
+
+    private String normalizaNome(String nome) {
+        return nome.strip();
+    }
+
+    private String normalizaEmail(String email) {
+        return email.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizaCpf(String cpf) {
+        return cpf.replaceAll("\\D", "");
     }
 }
