@@ -2,6 +2,8 @@ package br.com.alura.booking.infra;
 
 import br.com.alura.booking.application.repository.UsuarioRepository;
 import br.com.alura.booking.domain.Usuario;
+import br.com.alura.booking.exception.CodigoErro;
+import br.com.alura.booking.exception.NegocioException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -31,5 +33,15 @@ public class UsuarioInfraRepository implements UsuarioRepository {
     public boolean existeUsuarioPorCpf(String cpf) {
         log.debug("[start] - {} - existeUsuarioPorCpf", getClass().getSimpleName());
         return usuarioJPARepository.existsByCpf(cpf);
+    }
+
+    @Override
+    public Usuario buscaUsuarioPorId(Long id) {
+        log.debug("[start] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        Usuario usuarioEncontrada = usuarioJPARepository
+                .findById(id)
+                .orElseThrow(() -> new NegocioException(CodigoErro.USUARIO_NAO_ENCONTRADO, String.valueOf(id)));
+        log.debug("[finish] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        return usuarioEncontrada;
     }
 }

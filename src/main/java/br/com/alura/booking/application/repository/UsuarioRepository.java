@@ -8,4 +8,6 @@ public interface UsuarioRepository {
     boolean existeUsuarioPorEmail(String email);
 
     boolean existeUsuarioPorCpf(String cpf);
+
+    Usuario buscaUsuarioPorId(Long id);
 }

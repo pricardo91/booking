@@ -21,4 +21,12 @@ public class UsuarioController implements UsuarioAPI {
         log.debug("[finish] - {} - cadastraUsuario", getClass().getSimpleName());
         return usuarioNovo;
     }
+
+    @Override
+    public UsuarioResponse buscaUsuarioPorId(Long id) {
+        log.debug("[start] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        UsuarioResponse usuario = usuarioService.buscaUsuarioPorId(id);
+        log.debug("[finish] - {} - buscaUsuarioPorId", getClass().getSimpleName());
+        return usuario;
+    }
 }
