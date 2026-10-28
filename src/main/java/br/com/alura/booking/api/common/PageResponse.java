@@ -1,4 +1,4 @@
-package br.com.alura.booking.api.sala.response;
+package br.com.alura.booking.api.common;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
