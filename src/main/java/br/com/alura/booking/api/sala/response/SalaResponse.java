@@ -2,11 +2,13 @@ package br.com.alura.booking.api.sala.response;
 
 import br.com.alura.booking.domain.Sala;
 import br.com.alura.booking.domain.StatusSala;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
-@JsonPropertyOrder({"id", "nome", "capacidade", "status"})
+@JsonPropertyOrder({"id", "nome", "capacidade", "status", "cadastradoEm", "atualizadoEm"})
 public class SalaResponse {
 
     private final Long id;
@@ -14,10 +16,18 @@ public class SalaResponse {
     private final Integer capacidade;
     private final StatusSala status;
 
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
+    private final LocalDateTime cadastradoEm;
+
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
+    private final LocalDateTime atualizadoEm;
+
     public SalaResponse(Sala sala) {
         this.id = sala.getId();
         this.nome = sala.getNome();
         this.capacidade = sala.getCapacidade();
         this.status = sala.getStatus();
+        this.cadastradoEm = sala.getCadastradoEm();
+        this.atualizadoEm = sala.getAtualizadoEm();
     }
 }
