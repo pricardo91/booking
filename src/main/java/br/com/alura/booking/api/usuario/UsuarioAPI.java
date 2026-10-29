@@ -113,4 +113,52 @@ public interface UsuarioAPI {
             })
     @PatchMapping("/{id}")
     UsuarioResponse atualizaUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioRequest usuarioRequest);
+
+    @Operation(summary = "Inativar usuário", description = "Inativa um usuário pelo id")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "204",
+                        description = "Usuário inativado com sucesso",
+                        content = @Content(schema = @Schema())),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Usuário não encontrado",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Usuário já está inativo",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @PatchMapping("/{id}/inativar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void inativaUsuario(@PathVariable Long id);
+
+    @Operation(summary = "Ativar usuário", description = "Ativa um usuário pelo id")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "204",
+                        description = "Usuário ativado com sucesso",
+                        content = @Content(schema = @Schema())),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Usuário não encontrado",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "Usuário já está ativo",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @PatchMapping("/{id}/ativar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void ativaUsuario(@PathVariable Long id);
 }

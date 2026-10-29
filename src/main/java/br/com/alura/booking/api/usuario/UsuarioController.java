@@ -51,4 +51,18 @@ public class UsuarioController implements UsuarioAPI {
         log.debug("[finish] - {} - atualizaUsuario", getClass().getSimpleName());
         return usuarioAtualizado;
     }
+
+    @Override
+    public void inativaUsuario(Long id) {
+        log.debug("[start] - {} - inativaUsuario", getClass().getSimpleName());
+        usuarioService.inativaUsuario(id);
+        log.debug("[finish] - {} - inativaUsuario", getClass().getSimpleName());
+    }
+
+    @Override
+    public void ativaUsuario(Long id) {
+        log.debug("[start] - {} - ativaUsuario", getClass().getSimpleName());
+        usuarioService.ativaUsuario(id);
+        log.debug("[finish] - {} - ativaUsuario", getClass().getSimpleName());
+    }
 }
