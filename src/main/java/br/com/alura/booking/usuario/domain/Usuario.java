@@ -1,6 +1,5 @@
 package br.com.alura.booking.usuario.domain;
 
-import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.shared.exception.CodigoErro;
 import br.com.alura.booking.shared.exception.NegocioException;
 import jakarta.persistence.*;
@@ -58,7 +57,7 @@ public class Usuario {
      * reservas. Inativar o usuário (em vez de apagá-lo) preserva o histórico das reservas que ele já
      * fez. Nasce ATIVO. Gravado como texto para não depender da ordem do enum no banco.
      *
-     * <p>A regra ainda não é aplicada: deve ser conferida no construtor de {@link Reserva}, como já
+     * <p>A regra ainda não é aplicada: deve ser conferida no construtor de {@code Reserva}, como já
      * acontece com a sala inativa.
      */
     @Enumerated(EnumType.STRING)

@@ -1,6 +1,5 @@
 package br.com.alura.booking.sala.domain;
 
-import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.shared.exception.CodigoErro;
 import br.com.alura.booking.shared.exception.NegocioException;
 import jakarta.persistence.*;
@@ -49,7 +48,7 @@ public class Sala {
      * Inativar a sala (em vez de apagá-la) preserva o histórico das reservas que já a usaram. Nasce
      * ATIVA. Gravado como texto para não depender da ordem do enum no banco.
      *
-     * <p>A regra é aplicada no construtor de {@link Reserva}.
+     * <p>A regra é aplicada no construtor de {@code Reserva}.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
