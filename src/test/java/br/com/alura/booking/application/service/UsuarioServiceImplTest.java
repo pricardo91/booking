@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import br.com.alura.booking.api.usuario.request.UsuarioRequest;
 import br.com.alura.booking.api.usuario.response.UsuarioResponse;
 import br.com.alura.booking.application.repository.UsuarioRepository;
+import br.com.alura.booking.domain.StatusUsuario;
 import br.com.alura.booking.domain.Usuario;
 import br.com.alura.booking.exception.CodigoErro;
 import br.com.alura.booking.exception.NegocioException;
@@ -65,5 +66,59 @@ class UsuarioServiceImplTest {
                 .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
                         .isEqualTo(CodigoErro.USUARIO_CPF_DUPLICADO));
         verify(usuarioRepository, never()).salva(any());
+    }
+
+    @Test
+    void inativaUsuarioMudaOStatusParaInativo() {
+        var usuario = new Usuario("Maria Souza", "maria@exemplo.com", "52998224725");
+        when(usuarioRepository.buscaUsuarioPorId(1L)).thenReturn(usuario);
+
+        usuarioService.inativaUsuario(1L);
+
+        assertThat(usuario.getStatus()).isEqualTo(StatusUsuario.INATIVO);
+        verify(usuarioRepository, never()).salva(any());
+    }
+
+    @Test
+    void inativaUsuarioRecusaUsuarioJaInativo() {
+        var usuario = new Usuario("Maria Souza", "maria@exemplo.com", "52998224725");
+        usuario.inativar();
+        when(usuarioRepository.buscaUsuarioPorId(1L)).thenReturn(usuario);
+
+        assertThatThrownBy(() -> usuarioService.inativaUsuario(1L))
+                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
+                        .isEqualTo(CodigoErro.USUARIO_JA_INATIVO));
+    }
+
+    @Test
+    void ativaUsuarioMudaOStatusParaAtivo() {
+        var usuario = new Usuario("Maria Souza", "maria@exemplo.com", "52998224725");
+        usuario.inativar();
+        when(usuarioRepository.buscaUsuarioPorId(1L)).thenReturn(usuario);
+
+        usuarioService.ativaUsuario(1L);
+
+        assertThat(usuario.getStatus()).isEqualTo(StatusUsuario.ATIVO);
+        verify(usuarioRepository, never()).salva(any());
+    }
+
+    @Test
+    void ativaUsuarioRecusaUsuarioJaAtivo() {
+        var usuario = new Usuario("Maria Souza", "maria@exemplo.com", "52998224725");
+        when(usuarioRepository.buscaUsuarioPorId(1L)).thenReturn(usuario);
+
+        assertThatThrownBy(() -> usuarioService.ativaUsuario(1L))
+                .isInstanceOfSatisfying(
+                        NegocioException.class, e -> assertThat(e.getCodigo()).isEqualTo(CodigoErro.USUARIO_JA_ATIVO));
+    }
+
+    @Test
+    void inativaUsuarioRepassaUsuarioNaoEncontrado() {
+        when(usuarioRepository.buscaUsuarioPorId(9999L))
+                .thenThrow(new NegocioException(CodigoErro.USUARIO_NAO_ENCONTRADO, "9999"));
+
+        assertThatThrownBy(() -> usuarioService.inativaUsuario(9999L))
+                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
+                        .isEqualTo(CodigoErro.USUARIO_NAO_ENCONTRADO));
     }
 }

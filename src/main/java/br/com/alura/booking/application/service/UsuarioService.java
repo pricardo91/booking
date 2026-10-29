@@ -14,4 +14,8 @@ public interface UsuarioService {
     Page<UsuarioResumoResponse> listaUsuarios(Pageable pageable);
 
     UsuarioResponse atualizaUsuario(Long id, UsuarioRequest usuarioRequest);
+
+    void inativaUsuario(Long id);
+
+    void ativaUsuario(Long id);
 }

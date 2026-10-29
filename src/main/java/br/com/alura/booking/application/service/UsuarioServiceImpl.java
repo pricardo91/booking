@@ -77,7 +77,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new NegocioException(CodigoErro.USUARIO_EMAIL_DUPLICADO, emailLimpo);
         }
         if (usuarioRepository.existeOutroUsuarioPorCpf(cpfSoDigitos, id)) {
-            throw new NegocioException(CodigoErro.USUARIO_CPF_DUPLICADO, cpfSoDigitos);
+            throw new NegocioException(CodigoErro.USUARIO_CPF_DUPLICADO);
         }
 
         usuario.atualizarUsuario(nomeLimpo, emailLimpo, cpfSoDigitos);
@@ -88,6 +88,24 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         log.debug("[finish] - {} - atualizaUsuario", getClass().getSimpleName());
         return usuarioResponse;
+    }
+
+    @Override
+    @Transactional
+    public void inativaUsuario(Long id) {
+        log.debug("[start] - {} - inativaUsuario", getClass().getSimpleName());
+        Usuario usuario = usuarioRepository.buscaUsuarioPorId(id);
+        usuario.inativar();
+        log.debug("[finish] - {} - inativaUsuario", getClass().getSimpleName());
+    }
+
+    @Override
+    @Transactional
+    public void ativaUsuario(Long id) {
+        log.debug("[start] - {} - ativaUsuario", getClass().getSimpleName());
+        Usuario usuario = usuarioRepository.buscaUsuarioPorId(id);
+        usuario.ativar();
+        log.debug("[finish] - {} - ativaUsuario", getClass().getSimpleName());
     }
 
     private String normalizaNome(String nome) {
