@@ -35,4 +35,14 @@ public class ReservaServiceImpl implements ReservaService {
         log.debug("[finish] - {} - cadastraReserva", getClass().getSimpleName());
         return response;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReservaResponse buscaReservaPorId(Long id) {
+        log.debug("[start] - {} - buscaReservaPorId", getClass().getSimpleName());
+        Reserva reserva = reservaRepository.buscaReservaPorId(id);
+        ReservaResponse response = new ReservaResponse(reserva);
+        log.debug("[finish] - {} - buscaReservaPorId", getClass().getSimpleName());
+        return response;
+    }
 }

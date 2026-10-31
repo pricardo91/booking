@@ -127,4 +127,25 @@ class ReservaServiceImplTest {
         assertErro(() -> reservaService.cadastraReserva(fimIgualAoInicio), CodigoErro.RESERVA_INTERVALO_INVALIDO);
         verify(reservaRepository, never()).salva(any());
     }
+
+    @Test
+    void buscaReservaPorIdDevolveReservaComUsuarioESala() {
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(new Reserva(usuario(), sala(), INICIO, FIM));
+
+        ReservaResponse resposta = reservaService.buscaReservaPorId(5L);
+
+        assertThat(resposta.getStatus()).isEqualTo(StatusReserva.PENDENTE);
+        assertThat(resposta.getInicio()).isEqualTo(INICIO);
+        assertThat(resposta.getFim()).isEqualTo(FIM);
+        assertThat(resposta.getUsuarioNome()).isEqualTo("Maria Souza");
+        assertThat(resposta.getSalaNome()).isEqualTo("Sala Azul");
+    }
+
+    @Test
+    void buscaReservaPorIdRepassaReservaNaoEncontrada() {
+        when(reservaRepository.buscaReservaPorId(99L))
+                .thenThrow(new NegocioException(CodigoErro.RESERVA_NAO_ENCONTRADA, "99"));
+
+        assertErro(() -> reservaService.buscaReservaPorId(99L), CodigoErro.RESERVA_NAO_ENCONTRADA, "99");
+    }
 }

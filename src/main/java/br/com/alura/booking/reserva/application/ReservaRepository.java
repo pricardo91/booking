@@ -4,4 +4,6 @@ import br.com.alura.booking.reserva.domain.Reserva;
 
 public interface ReservaRepository {
     Reserva salva(Reserva reserva);
+
+    Reserva buscaReservaPorId(Long id);
 }
