@@ -46,4 +46,27 @@ public interface ReservaAPI {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ReservaResponse cadastraReserva(@Valid @RequestBody ReservaRequest novaReserva);
+
+    @Operation(summary = "Buscar reserva por id", description = "Busca uma reserva pelo id informado")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Reserva encontrada com sucesso",
+                        content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Id com formato inválido",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Reserva não encontrada",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @GetMapping("/{id}")
+    ReservaResponse buscaReservaPorId(@PathVariable Long id);
 }
