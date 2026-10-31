@@ -57,8 +57,7 @@ public class Usuario {
      * reservas. Inativar o usuário (em vez de apagá-lo) preserva o histórico das reservas que ele já
      * fez. Nasce ATIVO. Gravado como texto para não depender da ordem do enum no banco.
      *
-     * <p>A regra ainda não é aplicada: deve ser conferida no construtor de {@code Reserva}, como já
-     * acontece com a sala inativa.
+     * <p>A regra é aplicada no construtor de {@code Reserva}, como já acontece com a sala inativa.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
