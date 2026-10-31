@@ -100,11 +100,13 @@ public class Reserva {
     private LocalDateTime atualizadoEm;
 
     /**
-     * Cria uma reserva PENDENTE. Todos os campos são obrigatórios, a sala precisa estar ativa e o fim
-     * precisa ser posterior ao início.
+     * Cria uma reserva PENDENTE. Todos os campos são obrigatórios, a sala e o usuário precisam estar
+     * ativos e o fim precisa ser posterior ao início. As regras são conferidas nesta ordem: campos,
+     * sala, intervalo e usuário; a primeira que falhar interrompe a criação.
      *
-     * @throws NegocioException (CAMPO_OBRIGATORIO, SALA_INATIVA ou RESERVA_INTERVALO_INVALIDO) se
-     *     algum campo for nulo, a sala estiver inativa ou o intervalo for inválido
+     * @throws NegocioException (CAMPO_OBRIGATORIO, SALA_INATIVA, RESERVA_INTERVALO_INVALIDO ou
+     *     USUARIO_INATIVO) se algum campo for nulo, a sala estiver inativa, o intervalo for inválido
+     *     ou o usuário estiver inativo
      */
     public Reserva(Usuario usuario, Sala sala, LocalDateTime inicio, LocalDateTime fim) {
         this.usuario = exigir(usuario, "usuário");
@@ -114,6 +116,7 @@ public class Reserva {
 
         validaSalaAtiva();
         validaIntervalo();
+        validaUsuarioAtivo();
     }
 
     /** Preenche a data de cadastro antes de gravar pela primeira vez. */
@@ -223,6 +226,15 @@ public class Reserva {
      */
     private boolean isIntervaloValido() {
         return inicio == null || fim == null || fim.isAfter(inicio);
+    }
+
+    /**
+     * Recusa uma reserva feita por um usuário inativo.
+     */
+    private void validaUsuarioAtivo() {
+        if (!usuario.isAtivo()) {
+            throw new NegocioException(CodigoErro.USUARIO_INATIVO);
+        }
     }
 
     /**

@@ -102,6 +102,37 @@ class ReservaTest {
         assertErro(() -> new Reserva(usuarioValido(), sala, as("10:00"), as("11:00")), CodigoErro.SALA_INATIVA);
     }
 
+    // ---------- usuário ----------
+
+    @Test
+    void recusaReservarUsuarioInativo() {
+        Usuario usuario = usuarioValido();
+        usuario.inativar();
+
+        assertErro(() -> new Reserva(usuario, salaValida(), as("10:00"), as("11:00")), CodigoErro.USUARIO_INATIVO);
+    }
+
+    @Test
+    void aceitaReservarUsuarioReativado() {
+        Usuario usuario = usuarioValido();
+        usuario.inativar();
+        usuario.ativar();
+
+        Reserva reserva = new Reserva(usuario, salaValida(), as("10:00"), as("11:00"));
+
+        assertThat(reserva.getUsuario()).isSameAs(usuario);
+    }
+
+    @Test
+    void conferePrimeiroASalaInativaDepoisOUsuarioInativo() {
+        Usuario usuario = usuarioValido();
+        usuario.inativar();
+        Sala sala = salaValida();
+        sala.inativar();
+
+        assertErro(() -> new Reserva(usuario, sala, as("10:00"), as("11:00")), CodigoErro.SALA_INATIVA);
+    }
+
     // ---------- intervalo ----------
 
     @Test

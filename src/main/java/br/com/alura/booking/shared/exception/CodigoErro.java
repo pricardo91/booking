@@ -53,8 +53,10 @@ public enum CodigoErro {
     USUARIO_CPF_DUPLICADO("usuario.cpf.duplicado", CategoriaErro.CONFLITO),
 
     USUARIO_JA_ATIVO("usuario.ja.ativo", CategoriaErro.CONFLITO),
+    USUARIO_JA_INATIVO("usuario.ja.inativo", CategoriaErro.CONFLITO),
 
-    USUARIO_JA_INATIVO("usuario.ja.inativo", CategoriaErro.CONFLITO);
+    /** Sem argumento: usuário INATIVO não pode fazer reservas novas (regra aplicada em Reserva). */
+    USUARIO_INATIVO("usuario.inativo", CategoriaErro.REGRA_DE_NEGOCIO);
 
     /** Chave, no messages.properties, do texto deste erro. */
     private final String chave;
