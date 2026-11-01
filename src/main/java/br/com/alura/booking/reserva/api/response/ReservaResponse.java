@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 @JsonPropertyOrder({
     "id",
-    "usuarioId",
+    "idUsuario",
     "usuarioNome",
     "salaId",
     "salaNome",
