@@ -2,11 +2,14 @@ package br.com.alura.booking.reserva.application;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
+import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
 import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.sala.application.SalaRepository;
 import br.com.alura.booking.usuario.application.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,5 +47,14 @@ public class ReservaServiceImpl implements ReservaService {
         ReservaResponse response = new ReservaResponse(reserva);
         log.debug("[finish] - {} - buscaReservaPorId", getClass().getSimpleName());
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReservaResumoResponse> listaReserva(ReservaFiltro filtro, Pageable pageable) {
+        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
+        Page<Reserva> reservas = reservaRepository.listaReserva(filtro, pageable);
+        log.debug("[finish] - {} - listaReserva", getClass().getSimpleName());
+        return reservas.map(ReservaResumoResponse::new);
     }
 }

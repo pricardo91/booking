@@ -58,7 +58,7 @@ public interface SalaAPI {
                         content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
             })
     @GetMapping
-    PageResponse<SalaResumoResponse> listaSala(
+    PageResponse<SalaResumoResponse> listaSalas(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size);
 
