@@ -29,10 +29,10 @@ public class SalaController implements SalaAPI {
     }
 
     @Override
-    public PageResponse<SalaResumoResponse> listaSala(int page, int size) {
-        log.debug("[start] - {} - listaSala", getClass().getSimpleName());
+    public PageResponse<SalaResumoResponse> listaSalas(int page, int size) {
+        log.debug("[start] - {} - listaSalas", getClass().getSimpleName());
         Page<SalaResumoResponse> salaPaginada = salaService.listaSalas(PageRequest.of(page, size, Sort.by("nome")));
-        log.debug("[finish] - {} - listaSala", getClass().getSimpleName());
+        log.debug("[finish] - {} - listaSalas", getClass().getSimpleName());
         return PageResponse.from(salaPaginada);
     }
 
