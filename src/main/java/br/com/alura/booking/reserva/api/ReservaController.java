@@ -2,9 +2,16 @@ package br.com.alura.booking.reserva.api;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
+import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
+import br.com.alura.booking.reserva.application.ReservaFiltro;
 import br.com.alura.booking.reserva.application.ReservaService;
+import br.com.alura.booking.reserva.domain.StatusReserva;
+import br.com.alura.booking.shared.api.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,5 +35,20 @@ public class ReservaController implements ReservaAPI {
         ReservaResponse response = reservaService.buscaReservaPorId(id);
         log.debug("[finish] - {} - buscaReservaPorId", getClass().getSimpleName());
         return response;
+    }
+
+    @Override
+    public PageResponse<ReservaResumoResponse> listaReserva(
+            int page, int size, StatusReserva status, Long idSala, Long idUsuario) {
+
+        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
+        ReservaFiltro filtro = new ReservaFiltro(status, idSala, idUsuario);
+
+        Page<ReservaResumoResponse> reservaPaginada = reservaService.listaReserva(
+                filtro, PageRequest.of(page, size, Sort.by("inicio").descending()));
+
+        log.debug("[finish] - {} - listaReserva", getClass().getSimpleName());
+
+        return PageResponse.from(reservaPaginada);
     }
 }
