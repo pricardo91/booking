@@ -12,7 +12,6 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
-    show-sql: true
 
 springdoc:
   api-docs:
@@ -23,3 +22,4 @@ springdoc:
 logging:
   level:
     br.com.alura.booking: DEBUG
+    org.hibernate.SQL: DEBUG
