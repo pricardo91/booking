@@ -191,7 +191,6 @@ class ReservaControllerTest {
     private static String corpo(Long usuarioId, Long salaId, String inicio, String fim) {
         return """
                 {"usuarioId": %d, "salaId": %d, "inicio": "%s", "fim": "%s"}
-                """
-                .formatted(usuarioId, salaId, inicio, fim);
+                """.formatted(usuarioId, salaId, inicio, fim);
     }
 }
