@@ -25,6 +25,12 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/booking
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
     ports:
       - "8080:8080"
 
