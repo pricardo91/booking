@@ -51,8 +51,9 @@ class UsuarioServiceImplTest {
         when(usuarioRepository.existeUsuarioPorEmail("maria@exemplo.com")).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.cadastraUsuario(pedido))
-                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
-                        .isEqualTo(CodigoErro.USUARIO_EMAIL_DUPLICADO));
+                .isInstanceOfSatisfying(
+                        NegocioException.class,
+                        e -> assertThat(e.getCodigo()).isEqualTo(CodigoErro.USUARIO_EMAIL_DUPLICADO));
         verify(usuarioRepository, never()).salva(any());
     }
 
@@ -62,8 +63,9 @@ class UsuarioServiceImplTest {
         when(usuarioRepository.existeUsuarioPorCpf("52998224725")).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.cadastraUsuario(pedido))
-                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
-                        .isEqualTo(CodigoErro.USUARIO_CPF_DUPLICADO));
+                .isInstanceOfSatisfying(
+                        NegocioException.class,
+                        e -> assertThat(e.getCodigo()).isEqualTo(CodigoErro.USUARIO_CPF_DUPLICADO));
         verify(usuarioRepository, never()).salva(any());
     }
 
@@ -85,8 +87,9 @@ class UsuarioServiceImplTest {
         when(usuarioRepository.buscaUsuarioPorId(1L)).thenReturn(usuario);
 
         assertThatThrownBy(() -> usuarioService.inativaUsuario(1L))
-                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
-                        .isEqualTo(CodigoErro.USUARIO_JA_INATIVO));
+                .isInstanceOfSatisfying(
+                        NegocioException.class,
+                        e -> assertThat(e.getCodigo()).isEqualTo(CodigoErro.USUARIO_JA_INATIVO));
     }
 
     @Test
@@ -117,7 +120,8 @@ class UsuarioServiceImplTest {
                 .thenThrow(new NegocioException(CodigoErro.USUARIO_NAO_ENCONTRADO, "9999"));
 
         assertThatThrownBy(() -> usuarioService.inativaUsuario(9999L))
-                .isInstanceOfSatisfying(NegocioException.class, e -> assertThat(e.getCodigo())
-                        .isEqualTo(CodigoErro.USUARIO_NAO_ENCONTRADO));
+                .isInstanceOfSatisfying(
+                        NegocioException.class,
+                        e -> assertThat(e.getCodigo()).isEqualTo(CodigoErro.USUARIO_NAO_ENCONTRADO));
     }
 }
