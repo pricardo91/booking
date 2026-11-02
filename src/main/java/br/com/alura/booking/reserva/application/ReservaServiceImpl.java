@@ -51,10 +51,10 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservaResumoResponse> listaReserva(ReservaFiltro filtro, Pageable pageable) {
-        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
-        Page<Reserva> reservas = reservaRepository.listaReserva(filtro, pageable);
-        log.debug("[finish] - {} - listaReserva", getClass().getSimpleName());
+    public Page<ReservaResumoResponse> listaReservas(ReservaFiltro filtro, Pageable pageable) {
+        log.debug("[start] - {} - listaReservas", getClass().getSimpleName());
+        Page<Reserva> reservas = reservaRepository.listaReservas(filtro, pageable);
+        log.debug("[finish] - {} - listaReservas", getClass().getSimpleName());
         return reservas.map(ReservaResumoResponse::new);
     }
 }

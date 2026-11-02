@@ -95,7 +95,7 @@ public interface ReservaAPI {
                         content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
             })
     @GetMapping
-    PageResponse<ReservaResumoResponse> listaReserva(
+    PageResponse<ReservaResumoResponse> listaReservas(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size,
             @RequestParam(required = false) StatusReserva status,

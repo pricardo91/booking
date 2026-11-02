@@ -8,9 +8,12 @@ import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.reserva.domain.StatusReserva;
 import br.com.alura.booking.sala.domain.Sala;
 import br.com.alura.booking.usuario.domain.Usuario;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +38,7 @@ import org.springframework.data.domain.Sort;
  *   <li>13h: João, Sala Verde, CANCELADO
  * </ul>
  */
-@DataJpaTest
+@DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({PostgresTesteConfig.class, ReservaInfraRepository.class})
 class ReservaInfraRepositoryTest {
@@ -51,6 +54,9 @@ class ReservaInfraRepositoryTest {
 
     @Autowired
     private ReservaInfraRepository repositorio;
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     private Sala salaAzul;
     private Sala salaVerde;
@@ -91,7 +97,7 @@ class ReservaInfraRepositoryTest {
 
     @Test
     void listaTodasQuandoNaoHaFiltro() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(null, null, null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(null, null, null), PADRAO);
 
         assertThat(ids(pagina))
                 .containsExactlyInAnyOrder(
@@ -103,28 +109,28 @@ class ReservaInfraRepositoryTest {
 
     @Test
     void filtraPorStatus() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(StatusReserva.ATIVO, null, null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(StatusReserva.ATIVO, null, null), PADRAO);
 
         assertThat(ids(pagina)).containsExactlyInAnyOrder(ativaDaMariaNaVerde.getId(), ativaDoJoaoNaAzul.getId());
     }
 
     @Test
     void filtraPorSala() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(null, salaAzul.getId(), null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(null, salaAzul.getId(), null), PADRAO);
 
         assertThat(ids(pagina)).containsExactlyInAnyOrder(pendenteDaMariaNaAzul.getId(), ativaDoJoaoNaAzul.getId());
     }
 
     @Test
     void filtraPorUsuario() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(null, null, maria.getId()), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(null, null, maria.getId()), PADRAO);
 
         assertThat(ids(pagina)).containsExactlyInAnyOrder(pendenteDaMariaNaAzul.getId(), ativaDaMariaNaVerde.getId());
     }
 
     @Test
     void combinaStatusESala() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(StatusReserva.ATIVO, salaAzul.getId(), null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(StatusReserva.ATIVO, salaAzul.getId(), null), PADRAO);
 
         assertThat(ids(pagina)).containsExactly(ativaDoJoaoNaAzul.getId());
     }
@@ -132,7 +138,7 @@ class ReservaInfraRepositoryTest {
     @Test
     void combinaOsTresFiltros() {
         Page<Reserva> pagina =
-                repositorio.listaReserva(filtro(StatusReserva.PENDENTE, salaAzul.getId(), maria.getId()), PADRAO);
+                repositorio.listaReservas(filtro(StatusReserva.PENDENTE, salaAzul.getId(), maria.getId()), PADRAO);
 
         assertThat(ids(pagina)).containsExactly(pendenteDaMariaNaAzul.getId());
     }
@@ -141,7 +147,7 @@ class ReservaInfraRepositoryTest {
     void devolveVazioQuandoNenhumaReservaAtendeATodosOsFiltros() {
         // Cada filtro sozinho acha reservas; juntos, nenhuma: a Maria na Sala Azul só tem a PENDENTE.
         Page<Reserva> pagina =
-                repositorio.listaReserva(filtro(StatusReserva.ATIVO, salaAzul.getId(), maria.getId()), PADRAO);
+                repositorio.listaReservas(filtro(StatusReserva.ATIVO, salaAzul.getId(), maria.getId()), PADRAO);
 
         assertThat(pagina.getContent()).isEmpty();
         assertThat(pagina.getTotalElements()).isZero();
@@ -149,14 +155,14 @@ class ReservaInfraRepositoryTest {
 
     @Test
     void devolveVazioQuandoNenhumaReservaTemOStatus() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(StatusReserva.FINALIZADO, null, null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(StatusReserva.FINALIZADO, null, null), PADRAO);
 
         assertThat(pagina.getContent()).isEmpty();
     }
 
     @Test
     void ordenaDaReservaMaisRecenteParaAMaisAntiga() {
-        Page<Reserva> pagina = repositorio.listaReserva(filtro(null, null, null), PADRAO);
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(null, null, null), PADRAO);
 
         assertThat(ids(pagina))
                 .containsExactly(
@@ -171,14 +177,33 @@ class ReservaInfraRepositoryTest {
         Sort maisRecentePrimeiro = Sort.by("inicio").descending();
 
         Page<Reserva> primeira =
-                repositorio.listaReserva(filtro(null, null, null), PageRequest.of(0, 2, maisRecentePrimeiro));
+                repositorio.listaReservas(filtro(null, null, null), PageRequest.of(0, 2, maisRecentePrimeiro));
         Page<Reserva> segunda =
-                repositorio.listaReserva(filtro(null, null, null), PageRequest.of(1, 2, maisRecentePrimeiro));
+                repositorio.listaReservas(filtro(null, null, null), PageRequest.of(1, 2, maisRecentePrimeiro));
 
         assertThat(primeira.getTotalElements()).isEqualTo(4);
         assertThat(primeira.getTotalPages()).isEqualTo(2);
         assertThat(ids(primeira)).containsExactly(canceladaDoJoaoNaVerde.getId(), ativaDoJoaoNaAzul.getId());
         assertThat(ids(segunda)).containsExactly(ativaDaMariaNaVerde.getId(), pendenteDaMariaNaAzul.getId());
+    }
+
+    @Test
+    void carregaUsuarioESalaNaMesmaConsulta() {
+        Statistics estatisticas =
+                entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        estatisticas.clear();
+
+        Page<Reserva> pagina = repositorio.listaReservas(filtro(null, null, null), PADRAO);
+
+        // Ler o nome do usuário e da sala de cada reserva, como o ReservaResumoResponse faz. Sem o
+        // @EntityGraph, cada leitura dispararia uma consulta nova (o problema do N+1).
+        assertThat(pagina.getContent())
+                .extracting(reserva -> reserva.getUsuario().getNome())
+                .containsExactly("João Lima", "João Lima", "Maria Souza", "Maria Souza");
+        assertThat(pagina.getContent())
+                .extracting(reserva -> reserva.getSala().getNome())
+                .containsExactly("Sala Verde", "Sala Azul", "Sala Verde", "Sala Azul");
+        assertThat(estatisticas.getPrepareStatementCount()).isEqualTo(1);
     }
 
     private static LocalDateTime hora(int hora) {

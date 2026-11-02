@@ -38,8 +38,8 @@ public class ReservaInfraRepository implements ReservaRepository {
     }
 
     @Override
-    public Page<Reserva> listaReserva(ReservaFiltro filtro, Pageable pageable) {
-        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
+    public Page<Reserva> listaReservas(ReservaFiltro filtro, Pageable pageable) {
+        log.debug("[start] - {} - listaReservas", getClass().getSimpleName());
 
         Specification<Reserva> specification = Specification.allOf(
                 ReservaSpecs.comStatus(filtro.status()),
@@ -47,7 +47,7 @@ public class ReservaInfraRepository implements ReservaRepository {
                 ReservaSpecs.doUsuario(filtro.idUsuario()));
         Page<Reserva> reservas = reservaJPARepository.findAll(specification, pageable);
 
-        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
+        log.debug("[finish] - {} - listaReservas", getClass().getSimpleName());
         return reservas;
     }
 }

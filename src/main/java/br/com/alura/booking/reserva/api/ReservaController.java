@@ -38,16 +38,16 @@ public class ReservaController implements ReservaAPI {
     }
 
     @Override
-    public PageResponse<ReservaResumoResponse> listaReserva(
+    public PageResponse<ReservaResumoResponse> listaReservas(
             int page, int size, StatusReserva status, Long idSala, Long idUsuario) {
 
-        log.debug("[start] - {} - listaReserva", getClass().getSimpleName());
+        log.debug("[start] - {} - listaReservas", getClass().getSimpleName());
         ReservaFiltro filtro = new ReservaFiltro(status, idSala, idUsuario);
 
-        Page<ReservaResumoResponse> reservaPaginada = reservaService.listaReserva(
+        Page<ReservaResumoResponse> reservaPaginada = reservaService.listaReservas(
                 filtro, PageRequest.of(page, size, Sort.by("inicio").descending()));
 
-        log.debug("[finish] - {} - listaReserva", getClass().getSimpleName());
+        log.debug("[finish] - {} - listaReservas", getClass().getSimpleName());
 
         return PageResponse.from(reservaPaginada);
     }
