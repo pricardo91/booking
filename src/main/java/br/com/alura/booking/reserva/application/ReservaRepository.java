@@ -9,5 +9,5 @@ public interface ReservaRepository {
 
     Reserva buscaReservaPorId(Long id);
 
-    Page<Reserva> listaReserva(ReservaFiltro filtro, Pageable pageable);
+    Page<Reserva> listaReservas(ReservaFiltro filtro, Pageable pageable);
 }
