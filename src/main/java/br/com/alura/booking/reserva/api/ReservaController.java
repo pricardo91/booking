@@ -41,14 +41,22 @@ public class ReservaController implements ReservaAPI {
     public PageResponse<ReservaResumoResponse> listaReservas(
             int page, int size, StatusReserva status, Long idSala, Long idUsuario) {
 
-        log.debug("[start] - {} - listaReservas", getClass().getSimpleName());
+        log.debug("[start] - {} - listaReservaHistorico", getClass().getSimpleName());
         ReservaFiltro filtro = new ReservaFiltro(status, idSala, idUsuario);
 
         Page<ReservaResumoResponse> reservaPaginada = reservaService.listaReservas(
                 filtro, PageRequest.of(page, size, Sort.by("inicio").descending()));
 
-        log.debug("[finish] - {} - listaReservas", getClass().getSimpleName());
+        log.debug("[finish] - {} - listaReservaHistorico", getClass().getSimpleName());
 
         return PageResponse.from(reservaPaginada);
+    }
+
+    @Override
+    public ReservaResponse confirmaReserva(Long id) {
+        log.debug("[start] - {} - confirmaReserva", getClass().getSimpleName());
+        ReservaResponse response = reservaService.confirmaReserva(id);
+        log.debug("[finish] - {} - confirmaReserva", getClass().getSimpleName());
+        return response;
     }
 }

@@ -12,4 +12,6 @@ public interface ReservaService {
     ReservaResponse buscaReservaPorId(Long id);
 
     Page<ReservaResumoResponse> listaReservas(ReservaFiltro filtro, Pageable pageable);
+
+    ReservaResponse confirmaReserva(Long id);
 }
