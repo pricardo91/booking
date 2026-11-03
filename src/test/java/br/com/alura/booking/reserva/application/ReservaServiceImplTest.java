@@ -336,4 +336,107 @@ class ReservaServiceImplTest {
         verify(reservaRepository, never()).buscaReservaPorId(any());
         verify(reservaRepository, never()).salva(any());
     }
+
+    // ---------- cancelaReserva ----------
+
+    private static Reserva ativa() {
+        Reserva reserva = pendente();
+        reserva.confirmar();
+        return reserva;
+    }
+
+    @Test
+    void cancelaReservaPendenteEGravaOHistorico() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        ReservaResponse resposta = reservaService.cancelaReserva(5L);
+
+        assertThat(resposta.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        verify(reservaRepository).salva(reserva);
+        var historico = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository).registraReservaHistorico(historico.capture());
+        assertThat(historico.getValue().getReserva()).isSameAs(reserva);
+        assertThat(historico.getValue().getStatusAnterior()).isEqualTo(StatusReserva.PENDENTE);
+        assertThat(historico.getValue().getStatusNovo()).isEqualTo(StatusReserva.CANCELADO);
+        assertThat(historico.getValue().getMotivo()).isEqualTo(MotivoHistorico.CANCELAMENTO_PELO_USUARIO);
+    }
+
+    @Test
+    void cancelaReservaAtivaGuardandoOStatusAnteriorNoHistorico() {
+        Reserva reserva = ativa();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        ReservaResponse resposta = reservaService.cancelaReserva(5L);
+
+        assertThat(resposta.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        var historico = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository).registraReservaHistorico(historico.capture());
+        assertThat(historico.getValue().getStatusAnterior()).isEqualTo(StatusReserva.ATIVO);
+        assertThat(historico.getValue().getStatusNovo()).isEqualTo(StatusReserva.CANCELADO);
+    }
+
+    @Test
+    void cancelaReservaRecusaReservaJaCancelada() {
+        Reserva reserva = pendente();
+        reserva.cancelar();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        assertErro(() -> reservaService.cancelaReserva(5L), CodigoErro.RESERVA_JA_CANCELADA);
+
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+    }
+
+    @Test
+    void cancelaReservaRecusaReservaFinalizada() {
+        Reserva reserva = ativa();
+        reserva.finalizar(FIM);
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        assertErro(() -> reservaService.cancelaReserva(5L), CodigoErro.RESERVA_FINALIZADA_NAO_CANCELA);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.FINALIZADO);
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+    }
+
+    @Test
+    void cancelaReservaRepassaReservaNaoEncontrada() {
+        when(reservaRepository.buscaIdDaSalaDaReserva(99L))
+                .thenThrow(new NegocioException(CodigoErro.RESERVA_NAO_ENCONTRADA, "99"));
+
+        assertErro(() -> reservaService.cancelaReserva(99L), CodigoErro.RESERVA_NAO_ENCONTRADA, "99");
+
+        verify(salaRepository, never()).travaSala(anyLong());
+        verify(reservaRepository, never()).salva(any());
+    }
+
+    @Test
+    void cancelaReservaTravaASalaAntesDeLerAReserva() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaIdDaSalaDaReserva(5L)).thenReturn(2L);
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.cancelaReserva(5L);
+
+        // Mesma ordem do confirma: todas as operações da sala entram na mesma fila.
+        InOrder ordem = inOrder(reservaRepository, salaRepository);
+        ordem.verify(reservaRepository).buscaIdDaSalaDaReserva(5L);
+        ordem.verify(salaRepository).travaSala(2L);
+        ordem.verify(reservaRepository).buscaReservaPorId(5L);
+    }
+
+    @Test
+    void cancelaReservaRepassaSalaNaoEncontradaAoTravar() {
+        when(reservaRepository.buscaIdDaSalaDaReserva(5L)).thenReturn(2L);
+        doThrow(new NegocioException(CodigoErro.SALA_NAO_ENCONTRADA, "2"))
+                .when(salaRepository)
+                .travaSala(2L);
+
+        assertErro(() -> reservaService.cancelaReserva(5L), CodigoErro.SALA_NAO_ENCONTRADA, "2");
+
+        verify(reservaRepository, never()).buscaReservaPorId(any());
+        verify(reservaRepository, never()).salva(any());
+    }
 }

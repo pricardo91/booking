@@ -244,8 +244,76 @@ class ReservaControllerTest {
         mockMvc.perform(patch(URL + "/abc/confirma")).andExpect(status().isBadRequest());
     }
 
+    // ---------- PATCH /api/v1/reservas/{id}/cancela ----------
+
+    @Test
+    void cancelaReservaPendenteEGravaOHistorico() throws Exception {
+        mockMvc.perform(patch(cancela(pendenteNaAzul)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(pendenteNaAzul.getId()))
+                .andExpect(jsonPath("$.status").value("CANCELADO"));
+
+        assertThat(motivosDoHistorico(pendenteNaAzul)).containsExactly(MotivoHistorico.CANCELAMENTO_PELO_USUARIO);
+    }
+
+    @Test
+    void cancelaReservaAtivaELiberaOHorarioParaOutraConfirmacao() throws Exception {
+        Reserva noHorarioDaAtiva = grava(new Reserva(maria, salaVerde, hora(10), hora(11)));
+
+        mockMvc.perform(patch(cancela(ativaNaVerde)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELADO"));
+
+        mockMvc.perform(patch(confirma(noHorarioDaAtiva)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ATIVO"));
+    }
+
+    @Test
+    void cancelaReservaJaCanceladaDevolve409() throws Exception {
+        Reserva cancelada = new Reserva(maria, salaAzul, hora(14), hora(15));
+        cancelada.cancelar();
+        grava(cancelada);
+
+        mockMvc.perform(patch(cancela(cancelada)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+        assertThat(motivosDoHistorico(cancelada)).isEmpty();
+    }
+
+    @Test
+    void cancelaReservaFinalizadaDevolve409() throws Exception {
+        Reserva finalizada = new Reserva(maria, salaAzul, hora(14), hora(15));
+        finalizada.confirmar();
+        finalizada.finalizar(hora(16));
+        grava(finalizada);
+
+        mockMvc.perform(patch(cancela(finalizada)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+
+        mockMvc.perform(get(URL + "/" + finalizada.getId()))
+                .andExpect(jsonPath("$.status").value("FINALIZADO"));
+    }
+
+    @Test
+    void cancelaReservaInexistenteDevolve404() throws Exception {
+        mockMvc.perform(patch(URL + "/999999/cancela"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void cancelaReservaComIdInvalidoDevolve400() throws Exception {
+        mockMvc.perform(patch(URL + "/abc/cancela")).andExpect(status().isBadRequest());
+    }
+
     private static String confirma(Reserva reserva) {
         return URL + "/" + reserva.getId() + "/confirma";
+    }
+
+    private static String cancela(Reserva reserva) {
+        return URL + "/" + reserva.getId() + "/cancela";
     }
 
     /** Grava uma reserva PENDENTE e esvazia o cache do JPA, para as leituras virem do banco. */

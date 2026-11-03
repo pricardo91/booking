@@ -59,4 +59,12 @@ public class ReservaController implements ReservaAPI {
         log.debug("[finish] - {} - confirmaReserva", getClass().getSimpleName());
         return response;
     }
+
+    @Override
+    public ReservaResponse cancelaReserva(Long id) {
+        log.debug("[start] - {} - cancelaReserva", getClass().getSimpleName());
+        ReservaResponse response = reservaService.cancelaReserva(id);
+        log.debug("[finish] - {} - cancelaReserva", getClass().getSimpleName());
+        return response;
+    }
 }

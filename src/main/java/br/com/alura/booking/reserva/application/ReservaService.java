@@ -14,4 +14,6 @@ public interface ReservaService {
     Page<ReservaResumoResponse> listaReservas(ReservaFiltro filtro, Pageable pageable);
 
     ReservaResponse confirmaReserva(Long id);
+
+    ReservaResponse cancelaReserva(Long id);
 }
