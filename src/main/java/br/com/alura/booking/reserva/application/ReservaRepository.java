@@ -1,6 +1,7 @@
 package br.com.alura.booking.reserva.application;
 
 import br.com.alura.booking.reserva.domain.Reserva;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,5 +10,11 @@ public interface ReservaRepository {
 
     Reserva buscaReservaPorId(Long id);
 
+    Long buscaIdDaSalaDaReserva(Long idReserva);
+
     Page<Reserva> listaReservas(ReservaFiltro filtro, Pageable pageable);
+
+    boolean existeReservaAtivaSobreposta(Reserva reserva);
+
+    List<Reserva> listaPendentesSobrepostas(Reserva reserva);
 }

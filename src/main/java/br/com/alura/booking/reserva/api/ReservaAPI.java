@@ -101,4 +101,36 @@ public interface ReservaAPI {
             @RequestParam(required = false) StatusReserva status,
             @RequestParam(required = false) Long idSala,
             @RequestParam(required = false) Long idUsuario);
+
+    @Operation(
+            summary = "Confirmar reserva",
+            description = "Confirma uma reserva PENDENTE, que passa a ocupar a sala. As outras reservas PENDENTE da"
+                    + " mesma sala que se sobrepõem a ela são canceladas automaticamente (vale o primeiro a ser"
+                    + " confirmado). A mudança de cada reserva fica registrada no histórico")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Reserva confirmada com sucesso",
+                        content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Id com formato inválido",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Reserva não encontrada",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "A reserva não está PENDENTE, ou já existe uma reserva ativa na sala neste"
+                                + " horário",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @PatchMapping("/{id}/confirma")
+    ReservaResponse confirmaReserva(@PathVariable Long id);
 }

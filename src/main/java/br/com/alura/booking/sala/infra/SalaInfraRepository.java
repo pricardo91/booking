@@ -42,6 +42,15 @@ public class SalaInfraRepository implements SalaRepository {
     }
 
     @Override
+    public void travaSala(long id) {
+        log.debug("[start] - {} - travaSala", getClass().getSimpleName());
+        salaJPARepository
+                .buscaSalaComTrava(id)
+                .orElseThrow(() -> new NegocioException(CodigoErro.SALA_NAO_ENCONTRADA, String.valueOf(id)));
+        log.debug("[finish] - {} - travaSala", getClass().getSimpleName());
+    }
+
+    @Override
     public Page<Sala> listaSalas(Pageable pageable) {
         log.debug("[start] - {} - listaSalas", getClass().getSimpleName());
         Page<Sala> salas = salaJPARepository.findAll(pageable);
