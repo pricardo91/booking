@@ -31,9 +31,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 /**
- * Prova a regra central da confirmação: se duas reservas PENDENTE disputam o mesmo horário na mesma
- * sala e as duas são confirmadas ao mesmo tempo, só uma vira ATIVO e a outra recebe o erro de
- * conflito de horário.
+ * Prova as regras de concorrência da confirmação e do cancelamento:
+ *
+ * <ul>
+ *   <li>se duas reservas PENDENTE disputam o mesmo horário na mesma sala e as duas são confirmadas
+ *       ao mesmo tempo, só uma vira ATIVO e a outra recebe o erro de conflito de horário;
+ *   <li>se a mesma reserva é confirmada e cancelada ao mesmo tempo, ela termina CANCELADA.
+ * </ul>
  *
  * <p>Este teste NÃO usa {@code @Transactional}. A concorrência só existe com transações reais,
  * gravadas de verdade e vistas por duas conexões ao mesmo tempo. Por isso ele grava os dados e os
@@ -111,6 +115,42 @@ class ReservaConfirmacaoConcorrenteTest {
         }
     }
 
+    @Test
+    void confirmacaoECancelamentoSimultaneosDaMesmaReservaTerminamCanceladaENuncaAtiva() throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            for (int rodada = 0; rodada < RODADAS; rodada++) {
+                Long id = grava(DIA.atTime(8 + rodada, 0));
+                CyclicBarrier largada = new CyclicBarrier(2);
+
+                Future<Exception> confirmacao = pool.submit(() -> confirma(id, largada));
+                Future<Exception> cancelamento = pool.submit(() -> cancela(id, largada));
+                Exception erroDaConfirmacao = confirmacao.get(30, TimeUnit.SECONDS);
+                Exception erroDoCancelamento = cancelamento.get(30, TimeUnit.SECONDS);
+
+                // Cancelar sempre dá certo, porque PENDENTE e ATIVO podem ser cancelados.
+                assertThat(erroDoCancelamento)
+                        .as("erro do cancelamento na rodada %d", rodada)
+                        .isNull();
+                // Se o cancelamento entrou primeiro, a confirmação encontra a reserva CANCELADA e é recusada.
+                if (erroDaConfirmacao != null) {
+                    assertThat(erroDaConfirmacao)
+                            .as("erro da confirmação na rodada %d", rodada)
+                            .isInstanceOfSatisfying(
+                                    NegocioException.class,
+                                    erro -> assertThat(erro.getCodigo())
+                                            .isEqualTo(CodigoErro.RESERVA_SO_PENDENTE_CONFIRMA));
+                }
+                // Sem o lock da sala, os dois leriam PENDENTE e a reserva cancelada poderia voltar como ATIVO.
+                assertThat(reservaJPARepository.findById(id).orElseThrow().getStatus())
+                        .as("status final da reserva na rodada %d", rodada)
+                        .isEqualTo(StatusReserva.CANCELADO);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
     /** Grava uma reserva PENDENTE de uma hora e devolve o id. */
     private Long grava(LocalDateTime inicio) {
         return reservaJPARepository
@@ -126,6 +166,17 @@ class ReservaConfirmacaoConcorrenteTest {
         try {
             largada.await(10, TimeUnit.SECONDS);
             reservaService.confirmaReserva(id);
+            return null;
+        } catch (Exception erro) {
+            return erro;
+        }
+    }
+
+    /** Igual ao confirma, mas cancela. Devolve o erro lançado, ou null se deu certo. */
+    private Exception cancela(Long id, CyclicBarrier largada) {
+        try {
+            largada.await(10, TimeUnit.SECONDS);
+            reservaService.cancelaReserva(id);
             return null;
         } catch (Exception erro) {
             return erro;

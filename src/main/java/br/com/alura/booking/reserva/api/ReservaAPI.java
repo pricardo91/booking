@@ -133,4 +133,34 @@ public interface ReservaAPI {
             })
     @PatchMapping("/{id}/confirma")
     ReservaResponse confirmaReserva(@PathVariable Long id);
+
+    @Operation(
+            summary = "Cancelar reserva",
+            description = "Cancela uma reserva PENDENTE ou ATIVO e libera o horário na sala. "
+                    + "A mudança de status fica registrada no histórico")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Reserva cancelada com sucesso",
+                        content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Id com formato inválido",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Reserva não encontrada",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "409",
+                        description = "A reserva já está CANCELADA ou já foi FINALIZADA",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erro interno no servidor",
+                        content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+            })
+    @PatchMapping("/{id}/cancela")
+    ReservaResponse cancelaReserva(@PathVariable Long id);
 }
