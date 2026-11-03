@@ -2,15 +2,22 @@ package br.com.alura.booking.reserva.application;
 
 import static br.com.alura.booking.shared.exception.ErroAssert.assertErro;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
+import br.com.alura.booking.reserva.domain.MotivoHistorico;
 import br.com.alura.booking.reserva.domain.Reserva;
+import br.com.alura.booking.reserva.domain.ReservaHistorico;
 import br.com.alura.booking.reserva.domain.StatusReserva;
 import br.com.alura.booking.sala.application.SalaRepository;
 import br.com.alura.booking.sala.domain.Sala;
@@ -23,9 +30,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +54,9 @@ class ReservaServiceImplTest {
 
     @Mock
     private ReservaRepository reservaRepository;
+
+    @Mock
+    private ReservaHistoricoRepository reservaHistoricoRepository;
 
     @InjectMocks
     private ReservaServiceImpl reservaService;
@@ -199,5 +211,129 @@ class ReservaServiceImplTest {
 
         assertThat(pagina.getContent()).isEmpty();
         assertThat(pagina.getTotalElements()).isZero();
+    }
+
+    // ---------- confirmaReserva ----------
+
+    private static Reserva pendente() {
+        return new Reserva(usuario(), sala(), INICIO, FIM);
+    }
+
+    @Test
+    void confirmaReservaPendenteEGravaOHistorico() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        ReservaResponse resposta = reservaService.confirmaReserva(5L);
+
+        assertThat(resposta.getStatus()).isEqualTo(StatusReserva.ATIVO);
+        verify(reservaRepository).salva(reserva);
+        var historico = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository).registraReservaHistorico(historico.capture());
+        assertThat(historico.getValue().getReserva()).isSameAs(reserva);
+        assertThat(historico.getValue().getStatusAnterior()).isEqualTo(StatusReserva.PENDENTE);
+        assertThat(historico.getValue().getStatusNovo()).isEqualTo(StatusReserva.ATIVO);
+        assertThat(historico.getValue().getMotivo()).isEqualTo(MotivoHistorico.CONFIRMACAO);
+    }
+
+    @Test
+    void confirmaReservaCancelaAsPendentesQueDisputamOHorario() {
+        Reserva reserva = pendente();
+        Reserva concorrenteUm = pendente();
+        Reserva concorrenteDois = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+        when(reservaRepository.listaPendentesSobrepostas(reserva)).thenReturn(List.of(concorrenteUm, concorrenteDois));
+
+        reservaService.confirmaReserva(5L);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.ATIVO);
+        assertThat(concorrenteUm.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        assertThat(concorrenteDois.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        verify(reservaRepository).salva(concorrenteUm);
+        verify(reservaRepository).salva(concorrenteDois);
+        var historicos = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository, times(3)).registraReservaHistorico(historicos.capture());
+        assertThat(historicos.getAllValues())
+                .extracting(ReservaHistorico::getReserva, ReservaHistorico::getMotivo)
+                .containsExactly(
+                        tuple(reserva, MotivoHistorico.CONFIRMACAO),
+                        tuple(concorrenteUm, MotivoHistorico.CONFLITO_COM_RESERVA_CONFIRMADA),
+                        tuple(concorrenteDois, MotivoHistorico.CONFLITO_COM_RESERVA_CONFIRMADA));
+    }
+
+    @Test
+    void confirmaReservaRecusaQuandoJaExisteReservaAtivaNoHorario() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+        when(reservaRepository.existeReservaAtivaSobreposta(reserva)).thenReturn(true);
+
+        assertErro(() -> reservaService.confirmaReserva(5L), CodigoErro.RESERVA_CONFLITO_HORARIO);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.PENDENTE);
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+    }
+
+    @Test
+    void confirmaReservaTraduzAViolacaoDaConstraintEmConflitoDeHorario() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+        when(reservaRepository.salva(reserva))
+                .thenThrow(new DataIntegrityViolationException("ex_reserva_sem_sobreposicao"));
+
+        assertErro(() -> reservaService.confirmaReserva(5L), CodigoErro.RESERVA_CONFLITO_HORARIO);
+
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+    }
+
+    @Test
+    void confirmaReservaRecusaReservaQueNaoEstaPendente() {
+        Reserva reserva = pendente();
+        reserva.confirmar();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        assertErro(() -> reservaService.confirmaReserva(5L), CodigoErro.RESERVA_SO_PENDENTE_CONFIRMA);
+
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+    }
+
+    @Test
+    void confirmaReservaRepassaReservaNaoEncontrada() {
+        when(reservaRepository.buscaIdDaSalaDaReserva(99L))
+                .thenThrow(new NegocioException(CodigoErro.RESERVA_NAO_ENCONTRADA, "99"));
+
+        assertErro(() -> reservaService.confirmaReserva(99L), CodigoErro.RESERVA_NAO_ENCONTRADA, "99");
+
+        verify(salaRepository, never()).travaSala(anyLong());
+        verify(reservaRepository, never()).salva(any());
+    }
+
+    @Test
+    void confirmaReservaTravaASalaAntesDeLerAReserva() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaIdDaSalaDaReserva(5L)).thenReturn(2L);
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.confirmaReserva(5L);
+
+        // A ordem é o que evita o deadlock: sala primeiro, reserva depois.
+        InOrder ordem = inOrder(reservaRepository, salaRepository);
+        ordem.verify(reservaRepository).buscaIdDaSalaDaReserva(5L);
+        ordem.verify(salaRepository).travaSala(2L);
+        ordem.verify(reservaRepository).buscaReservaPorId(5L);
+    }
+
+    @Test
+    void confirmaReservaRepassaSalaNaoEncontradaAoTravar() {
+        when(reservaRepository.buscaIdDaSalaDaReserva(5L)).thenReturn(2L);
+        doThrow(new NegocioException(CodigoErro.SALA_NAO_ENCONTRADA, "2"))
+                .when(salaRepository)
+                .travaSala(2L);
+
+        assertErro(() -> reservaService.confirmaReserva(5L), CodigoErro.SALA_NAO_ENCONTRADA, "2");
+
+        verify(reservaRepository, never()).buscaReservaPorId(any());
+        verify(reservaRepository, never()).salva(any());
     }
 }

@@ -206,6 +206,117 @@ class ReservaInfraRepositoryTest {
         assertThat(estatisticas.getPrepareStatementCount()).isEqualTo(1);
     }
 
+    // ---------- existeReservaAtivaSobreposta ----------
+    // A Sala Verde tem a reserva ATIVO da Maria das 10h às 11h. Cada teste grava uma candidata nova.
+
+    @Test
+    void detectaReservaAtivaQueCruzaOHorario() {
+        Reserva candidata = grava(joao, salaVerde, hora(10).plusMinutes(30), hora(11).plusMinutes(30));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isTrue();
+    }
+
+    @Test
+    void detectaReservaAtivaQueContemOHorario() {
+        Reserva candidata = grava(joao, salaVerde, hora(10).plusMinutes(15), hora(10).plusMinutes(45));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isTrue();
+    }
+
+    @Test
+    void detectaReservaAtivaContidaNoHorario() {
+        Reserva candidata = grava(joao, salaVerde, hora(9).plusMinutes(30), hora(12));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isTrue();
+    }
+
+    @Test
+    void naoConflitaQuandoUmaTerminaOndeAOutraComeca() {
+        Reserva candidata = grava(joao, salaVerde, hora(9), hora(10));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isFalse();
+    }
+
+    @Test
+    void naoConflitaQuandoUmaComecaOndeAOutraTermina() {
+        Reserva candidata = grava(joao, salaVerde, hora(11), hora(12));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isFalse();
+    }
+
+    @Test
+    void naoConflitaEmOutraSala() {
+        Sala salaAmarela = em.persist(new Sala("Sala Amarela", 6));
+        Reserva candidata = grava(joao, salaAmarela, hora(10), hora(11));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isFalse();
+    }
+
+    @Test
+    void ignoraReservaCancelada() {
+        Reserva candidata = grava(maria, salaVerde, hora(13).plusMinutes(30), hora(14).plusMinutes(30));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isFalse();
+    }
+
+    @Test
+    void ignoraReservaPendente() {
+        // A Sala Azul tem uma PENDENTE das 9h às 10h, mas nenhuma ATIVO nesse horário.
+        Reserva candidata = grava(joao, salaAzul, hora(9).plusMinutes(30), hora(10).plusMinutes(30));
+
+        assertThat(repositorio.existeReservaAtivaSobreposta(candidata)).isFalse();
+    }
+
+    @Test
+    void naoContaAPropriaReservaComoConflito() {
+        assertThat(repositorio.existeReservaAtivaSobreposta(ativaDaMariaNaVerde))
+                .isFalse();
+    }
+
+    // ---------- listaPendentesSobrepostas ----------
+    // A Sala Azul tem a PENDENTE da Maria das 9h às 10h e a ATIVO do João das 11h às 12h.
+
+    @Test
+    void listaAsPendentesQueCruzamOHorario() {
+        Reserva candidata = grava(joao, salaAzul, hora(9).plusMinutes(30), hora(10).plusMinutes(30));
+
+        assertThat(idsDe(repositorio.listaPendentesSobrepostas(candidata)))
+                .containsExactly(pendenteDaMariaNaAzul.getId());
+    }
+
+    @Test
+    void listaPendentesIgnoraAsReservasAtivasEAsCanceladas() {
+        // Na Sala Verde há uma ATIVO às 10h e uma CANCELADO às 13h, e nenhuma PENDENTE.
+        Reserva candidata = grava(joao, salaVerde, hora(9), hora(14));
+
+        assertThat(repositorio.listaPendentesSobrepostas(candidata)).isEmpty();
+    }
+
+    @Test
+    void listaPendentesNaoIncluiAPropriaReserva() {
+        assertThat(repositorio.listaPendentesSobrepostas(pendenteDaMariaNaAzul)).isEmpty();
+    }
+
+    @Test
+    void listaPendentesIgnoraAsDeOutraSala() {
+        // A PENDENTE da Sala Azul é das 9h às 10h, o mesmo horário desta candidata na Sala Verde.
+        Reserva candidata = grava(joao, salaVerde, hora(9), hora(10));
+
+        assertThat(repositorio.listaPendentesSobrepostas(candidata)).isEmpty();
+    }
+
+    /** Grava uma reserva PENDENTE e esvazia o cache do JPA, para as consultas lerem do banco. */
+    private Reserva grava(Usuario usuario, Sala sala, LocalDateTime inicio, LocalDateTime fim) {
+        Reserva reserva = em.persist(new Reserva(usuario, sala, inicio, fim));
+        em.flush();
+        em.clear();
+        return reserva;
+    }
+
+    private static List<Long> idsDe(List<Reserva> reservas) {
+        return reservas.stream().map(Reserva::getId).toList();
+    }
+
     private static LocalDateTime hora(int hora) {
         return DIA.atTime(hora, 0);
     }

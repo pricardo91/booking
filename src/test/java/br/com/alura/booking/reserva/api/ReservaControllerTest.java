@@ -1,18 +1,22 @@
 package br.com.alura.booking.reserva.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import br.com.alura.booking.PostgresTesteConfig;
+import br.com.alura.booking.reserva.domain.MotivoHistorico;
 import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.sala.domain.Sala;
 import br.com.alura.booking.usuario.domain.Usuario;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -182,6 +186,82 @@ class ReservaControllerTest {
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    // ---------- PATCH /api/v1/reservas/{id}/confirma ----------
+
+    @Test
+    void confirmaReservaPendente() throws Exception {
+        mockMvc.perform(patch(confirma(pendenteNaAzul)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(pendenteNaAzul.getId()))
+                .andExpect(jsonPath("$.status").value("ATIVO"));
+    }
+
+    @Test
+    void confirmaReservaCancelaAsPendentesQueDisputamOHorarioEGravaOHistorico() throws Exception {
+        Reserva concorrente = grava(new Reserva(maria, salaAzul, hora(9).plusMinutes(30), hora(10).plusMinutes(30)));
+
+        mockMvc.perform(patch(confirma(pendenteNaAzul))).andExpect(status().isOk());
+
+        mockMvc.perform(get(URL + "/" + concorrente.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELADO"));
+        assertThat(motivosDoHistorico(pendenteNaAzul)).containsExactly(MotivoHistorico.CONFIRMACAO);
+        assertThat(motivosDoHistorico(concorrente)).containsExactly(MotivoHistorico.CONFLITO_COM_RESERVA_CONFIRMADA);
+    }
+
+    @Test
+    void confirmaReservaQueJaEstaAtivaDevolve409() throws Exception {
+        mockMvc.perform(patch(confirma(ativaNaVerde)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void confirmaReservaQuandoOHorarioEstaOcupadoDevolve409() throws Exception {
+        Reserva noHorarioDaAtiva =
+                grava(new Reserva(maria, salaVerde, hora(10).plusMinutes(30), hora(11).plusMinutes(30)));
+
+        mockMvc.perform(patch(confirma(noHorarioDaAtiva)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(containsString("reserva ativa")));
+
+        mockMvc.perform(get(URL + "/" + noHorarioDaAtiva.getId()))
+                .andExpect(jsonPath("$.status").value("PENDENTE"));
+        assertThat(motivosDoHistorico(noHorarioDaAtiva)).isEmpty();
+    }
+
+    @Test
+    void confirmaReservaInexistenteDevolve404() throws Exception {
+        mockMvc.perform(patch(URL + "/999999/confirma"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void confirmaReservaComIdInvalidoDevolve400() throws Exception {
+        mockMvc.perform(patch(URL + "/abc/confirma")).andExpect(status().isBadRequest());
+    }
+
+    private static String confirma(Reserva reserva) {
+        return URL + "/" + reserva.getId() + "/confirma";
+    }
+
+    /** Grava uma reserva PENDENTE e esvazia o cache do JPA, para as leituras virem do banco. */
+    private Reserva grava(Reserva reserva) {
+        em.persist(reserva);
+        em.flush();
+        em.clear();
+        return reserva;
+    }
+
+    private List<MotivoHistorico> motivosDoHistorico(Reserva reserva) {
+        return em.createQuery(
+                        "select h.motivo from ReservaHistorico h where h.reserva.id = :id order by h.id",
+                        MotivoHistorico.class)
+                .setParameter("id", reserva.getId())
+                .getResultList();
     }
 
     private static LocalDateTime hora(int hora) {
