@@ -1,6 +1,7 @@
 package br.com.alura.booking.reserva.application;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
+import br.com.alura.booking.reserva.api.response.ReservaHistoricoResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
 import br.com.alura.booking.reserva.domain.MotivoHistorico;
@@ -128,5 +129,18 @@ public class ReservaServiceImpl implements ReservaService {
 
         log.debug("[finish] - {} - cancelaReserva", getClass().getSimpleName());
         return new ReservaResponse(reserva);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservaHistoricoResponse> historicoReserva(Long idReserva) {
+        log.debug("[start] - {} - historicoReserva", getClass().getSimpleName());
+
+        reservaRepository.buscaReservaPorId(idReserva);
+
+        List<ReservaHistorico> historico = reservaHistoricoRepository.listaReservaHistorico(idReserva);
+
+        log.debug("[finish] - {} - historicoReserva", getClass().getSimpleName());
+        return historico.stream().map(ReservaHistoricoResponse::new).toList();
     }
 }

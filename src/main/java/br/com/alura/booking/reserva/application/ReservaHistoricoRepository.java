@@ -7,5 +7,5 @@ public interface ReservaHistoricoRepository {
 
     void registraReservaHistorico(ReservaHistorico historico);
 
-    List<ReservaHistorico> listaReservaHistorico(Long id);
+    List<ReservaHistorico> listaReservaHistorico(Long idReserva);
 }

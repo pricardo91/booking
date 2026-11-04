@@ -1,10 +1,7 @@
 package br.com.alura.booking.reserva.infra;
 
 import br.com.alura.booking.reserva.application.ReservaHistoricoRepository;
-import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.reserva.domain.ReservaHistorico;
-import br.com.alura.booking.shared.exception.CodigoErro;
-import br.com.alura.booking.shared.exception.NegocioException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Repository;
 public class ReservaHistoricoRepositoryImpl implements ReservaHistoricoRepository {
 
     private final ReservaHistoricoJPARepository reservaHistoricoJPARepository;
-    private final ReservaJPARepository reservaJPARepository;
 
     @Override
     public void registraReservaHistorico(ReservaHistorico historico) {
@@ -26,15 +22,13 @@ public class ReservaHistoricoRepositoryImpl implements ReservaHistoricoRepositor
     }
 
     @Override
-    public List<ReservaHistorico> listaReservaHistorico(Long id) {
+    public List<ReservaHistorico> listaReservaHistorico(Long idReserva) {
         log.debug("[start] - {} - listaReservaHistorico", getClass().getSimpleName());
 
-        Reserva reserva = reservaJPARepository
-                .findById(id)
-                .orElseThrow(() -> new NegocioException(CodigoErro.RESERVA_NAO_ENCONTRADA));
+        List<ReservaHistorico> historicoLista =
+                reservaHistoricoJPARepository.findAllByReservaIdOrderByCriadoEmAscIdAsc(idReserva);
 
-        List<ReservaHistorico> historicoList = reservaHistoricoJPARepository.findAllByReserva(reserva.getId());
         log.debug("[finish] - {} - listaReservaHistorico", getClass().getSimpleName());
-        return historicoList;
+        return historicoLista;
     }
 }

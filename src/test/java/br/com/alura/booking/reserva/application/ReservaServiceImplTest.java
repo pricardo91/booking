@@ -10,9 +10,11 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
+import br.com.alura.booking.reserva.api.response.ReservaHistoricoResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
 import br.com.alura.booking.reserva.domain.MotivoHistorico;
@@ -438,5 +440,56 @@ class ReservaServiceImplTest {
 
         verify(reservaRepository, never()).buscaReservaPorId(any());
         verify(reservaRepository, never()).salva(any());
+    }
+
+    // ---------- historicoReserva ----------
+
+    @Test
+    void historicoReservaConverteCadaRegistroMantendoAOrdemRecebida() {
+        Reserva reserva = pendente();
+        var confirmacao =
+                new ReservaHistorico(reserva, StatusReserva.PENDENTE, StatusReserva.ATIVO, MotivoHistorico.CONFIRMACAO);
+        var cancelamento = new ReservaHistorico(
+                reserva, StatusReserva.ATIVO, StatusReserva.CANCELADO, MotivoHistorico.CANCELAMENTO_PELO_USUARIO);
+        when(reservaHistoricoRepository.listaReservaHistorico(5L)).thenReturn(List.of(confirmacao, cancelamento));
+
+        List<ReservaHistoricoResponse> resposta = reservaService.historicoReserva(5L);
+
+        assertThat(resposta)
+                .extracting(
+                        ReservaHistoricoResponse::getStatusAnterior,
+                        ReservaHistoricoResponse::getStatusNovo,
+                        ReservaHistoricoResponse::getMotivo)
+                .containsExactly(
+                        tuple(StatusReserva.PENDENTE, StatusReserva.ATIVO, MotivoHistorico.CONFIRMACAO),
+                        tuple(StatusReserva.ATIVO, StatusReserva.CANCELADO, MotivoHistorico.CANCELAMENTO_PELO_USUARIO));
+    }
+
+    @Test
+    void historicoReservaDevolveListaVaziaQuandoAReservaNaoMudouDeStatus() {
+        when(reservaHistoricoRepository.listaReservaHistorico(5L)).thenReturn(List.of());
+
+        assertThat(reservaService.historicoReserva(5L)).isEmpty();
+    }
+
+    @Test
+    void historicoReservaConfereAExistenciaDaReservaAntesDeListar() {
+        when(reservaHistoricoRepository.listaReservaHistorico(5L)).thenReturn(List.of());
+
+        reservaService.historicoReserva(5L);
+
+        InOrder ordem = inOrder(reservaRepository, reservaHistoricoRepository);
+        ordem.verify(reservaRepository).buscaReservaPorId(5L);
+        ordem.verify(reservaHistoricoRepository).listaReservaHistorico(5L);
+    }
+
+    @Test
+    void historicoReservaRepassaReservaNaoEncontradaSemConsultarOHistorico() {
+        when(reservaRepository.buscaReservaPorId(99L))
+                .thenThrow(new NegocioException(CodigoErro.RESERVA_NAO_ENCONTRADA, "99"));
+
+        assertErro(() -> reservaService.historicoReserva(99L), CodigoErro.RESERVA_NAO_ENCONTRADA, "99");
+
+        verifyNoInteractions(reservaHistoricoRepository);
     }
 }

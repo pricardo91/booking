@@ -1,12 +1,14 @@
 package br.com.alura.booking.reserva.api;
 
 import br.com.alura.booking.reserva.api.request.ReservaRequest;
+import br.com.alura.booking.reserva.api.response.ReservaHistoricoResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
 import br.com.alura.booking.reserva.application.ReservaFiltro;
 import br.com.alura.booking.reserva.application.ReservaService;
 import br.com.alura.booking.reserva.domain.StatusReserva;
 import br.com.alura.booking.shared.api.PageResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -53,18 +55,26 @@ public class ReservaController implements ReservaAPI {
     }
 
     @Override
-    public ReservaResponse confirmaReserva(Long id) {
+    public ReservaResponse confirmaReserva(Long idReserva) {
         log.debug("[start] - {} - confirmaReserva", getClass().getSimpleName());
-        ReservaResponse response = reservaService.confirmaReserva(id);
+        ReservaResponse response = reservaService.confirmaReserva(idReserva);
         log.debug("[finish] - {} - confirmaReserva", getClass().getSimpleName());
         return response;
     }
 
     @Override
-    public ReservaResponse cancelaReserva(Long id) {
+    public ReservaResponse cancelaReserva(Long idReserva) {
         log.debug("[start] - {} - cancelaReserva", getClass().getSimpleName());
-        ReservaResponse response = reservaService.cancelaReserva(id);
+        ReservaResponse response = reservaService.cancelaReserva(idReserva);
         log.debug("[finish] - {} - cancelaReserva", getClass().getSimpleName());
+        return response;
+    }
+
+    @Override
+    public List<ReservaHistoricoResponse> historicoReserva(Long idReserva) {
+        log.debug("[start] - {} - historicoReserva", getClass().getSimpleName());
+        List<ReservaHistoricoResponse> response = reservaService.historicoReserva(idReserva);
+        log.debug("[finish] - {} - historicoReserva", getClass().getSimpleName());
         return response;
     }
 }
