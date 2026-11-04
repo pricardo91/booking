@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReservaHistoricoJPARepository extends JpaRepository<ReservaHistorico, Long> {
 
-    List<ReservaHistorico> findAllByReserva(Long id);
+    List<ReservaHistorico> findAllByReservaIdOrderByCriadoEmAscIdAsc(Long id);
 }
