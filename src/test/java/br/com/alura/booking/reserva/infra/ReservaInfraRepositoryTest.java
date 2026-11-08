@@ -305,6 +305,43 @@ class ReservaInfraRepositoryTest {
         assertThat(repositorio.listaPendentesSobrepostas(candidata)).isEmpty();
     }
 
+    // ---------- buscaIdReservaVencidaPorStatus ----------
+    // Do cenário: a PENDENTE da Maria termina às 10h; as ATIVO terminam às 11h (Maria) e às 12h (João).
+
+    @Test
+    void devolveAAtivaQueTerminaNoInstanteExatoDaConsulta() {
+        // O fim não faz parte do intervalo, então no instante do fim a reserva já está vencida.
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(11), StatusReserva.ATIVO, 10))
+                .containsExactly(ativaDaMariaNaVerde.getId());
+    }
+
+    @Test
+    void naoDevolveReservaCujoHorarioAindaNaoTerminou() {
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(11).minusSeconds(1), StatusReserva.ATIVO, 10))
+                .isEmpty();
+    }
+
+    @Test
+    void devolveSoAsReservasDoStatusPedido() {
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(23), StatusReserva.PENDENTE, 10))
+                .containsExactly(pendenteDaMariaNaAzul.getId());
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(23), StatusReserva.ATIVO, 10))
+                .doesNotContain(pendenteDaMariaNaAzul.getId(), canceladaDoJoaoNaVerde.getId());
+    }
+
+    @Test
+    void ordenaPeloFimDaMaisAntigaParaAMaisRecente() {
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(23), StatusReserva.ATIVO, 10))
+                .containsExactly(ativaDaMariaNaVerde.getId(), ativaDoJoaoNaAzul.getId());
+    }
+
+    @Test
+    void respeitaOTamanhoDoLote() {
+        // Com lote de 1, vem só a que venceu primeiro; a outra fica para o próximo ciclo.
+        assertThat(repositorio.buscaIdReservaVencidaPorStatus(hora(23), StatusReserva.ATIVO, 1))
+                .containsExactly(ativaDaMariaNaVerde.getId());
+    }
+
     /** Grava uma reserva PENDENTE e esvazia o cache do JPA, para as consultas lerem do banco. */
     private Reserva grava(Usuario usuario, Sala sala, LocalDateTime inicio, LocalDateTime fim) {
         Reserva reserva = em.persist(new Reserva(usuario, sala, inicio, fim));
