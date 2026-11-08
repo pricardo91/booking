@@ -4,6 +4,7 @@ import br.com.alura.booking.reserva.api.request.ReservaRequest;
 import br.com.alura.booking.reserva.api.response.ReservaHistoricoResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,4 +21,6 @@ public interface ReservaService {
     ReservaResponse cancelaReserva(Long id);
 
     List<ReservaHistoricoResponse> historicoReserva(Long idReserva);
+
+    void processaReservaVencida(Long idReserva, LocalDateTime agora);
 }

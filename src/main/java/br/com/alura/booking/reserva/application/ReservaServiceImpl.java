@@ -4,17 +4,16 @@ import br.com.alura.booking.reserva.api.request.ReservaRequest;
 import br.com.alura.booking.reserva.api.response.ReservaHistoricoResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
-import br.com.alura.booking.reserva.domain.MotivoHistorico;
-import br.com.alura.booking.reserva.domain.Reserva;
-import br.com.alura.booking.reserva.domain.ReservaHistorico;
-import br.com.alura.booking.reserva.domain.StatusReserva;
+import br.com.alura.booking.reserva.domain.*;
 import br.com.alura.booking.sala.application.SalaRepository;
 import br.com.alura.booking.shared.exception.CodigoErro;
 import br.com.alura.booking.shared.exception.NegocioException;
 import br.com.alura.booking.usuario.application.UsuarioRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +29,7 @@ public class ReservaServiceImpl implements ReservaService {
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
     private final ReservaHistoricoRepository reservaHistoricoRepository;
+    private final ApplicationEventPublisher publicador;
 
     @Override
     @Transactional
@@ -142,5 +142,42 @@ public class ReservaServiceImpl implements ReservaService {
 
         log.debug("[finish] - {} - historicoReserva", getClass().getSimpleName());
         return historico.stream().map(ReservaHistoricoResponse::new).toList();
+    }
+
+    @Override
+    @Transactional
+    public void processaReservaVencida(Long idReserva, LocalDateTime agora) {
+        log.debug("[start] - {} - processaReservaVencida", getClass().getSimpleName());
+
+        Long idSala = reservaRepository.buscaIdDaSalaDaReserva(idReserva);
+        salaRepository.travaSala(idSala);
+
+        Reserva reserva = reservaRepository.buscaReservaPorId(idReserva);
+        if (reserva.getStatus() != StatusReserva.ATIVO && reserva.getStatus() != StatusReserva.PENDENTE) {
+            return;
+        }
+
+        StatusReserva statusAntigo = reserva.getStatus();
+
+        MotivoHistorico motivo;
+        if (reserva.getStatus() == StatusReserva.ATIVO) {
+            reserva.finalizar(agora);
+            motivo = MotivoHistorico.FINALIZACAO_AUTOMATICA;
+            publicador.publishEvent(new ReservaFinalizada(
+                    reserva.getId(),
+                    reserva.getSala().getId(),
+                    reserva.getUsuario().getId(),
+                    agora));
+        } else {
+            // verifica as reservas com status pendentes
+            reserva.cancelar();
+            motivo = MotivoHistorico.EXPIRACAO_SEM_CONFIRMACAO;
+        }
+
+        reservaRepository.salva(reserva);
+        reservaHistoricoRepository.registraReservaHistorico(
+                new ReservaHistorico(reserva, statusAntigo, reserva.getStatus(), motivo));
+
+        log.debug("[finish] - {} - processaReservaVencida", getClass().getSimpleName());
     }
 }

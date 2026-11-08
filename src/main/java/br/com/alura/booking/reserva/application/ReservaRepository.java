@@ -1,6 +1,8 @@
 package br.com.alura.booking.reserva.application;
 
 import br.com.alura.booking.reserva.domain.Reserva;
+import br.com.alura.booking.reserva.domain.StatusReserva;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,4 +19,6 @@ public interface ReservaRepository {
     boolean existeReservaAtivaSobreposta(Reserva reserva);
 
     List<Reserva> listaPendentesSobrepostas(Reserva reserva);
+
+    List<Long> buscaIdReservaVencidaPorStatus(LocalDateTime agora, StatusReserva statusReserva, int tamanhoLote);
 }

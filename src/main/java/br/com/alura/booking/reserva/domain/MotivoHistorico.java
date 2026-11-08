@@ -8,5 +8,7 @@ package br.com.alura.booking.reserva.domain;
 public enum MotivoHistorico {
     CONFIRMACAO, // o usuário confirmou a reserva
     CANCELAMENTO_PELO_USUARIO, // o usuário cancelou a reserva
-    CONFLITO_COM_RESERVA_CONFIRMADA; // cancelada automaticamente porque outra reserva ganhou o horário
+    CONFLITO_COM_RESERVA_CONFIRMADA, // cancelada automaticamente porque outra reserva ganhou o horário
+    FINALIZACAO_AUTOMATICA, // finalizada automaticamente porque o fim do horário chegou
+    EXPIRACAO_SEM_CONFIRMACAO // cancelada automaticamente porque o horário passou sem a confirmação
 }
