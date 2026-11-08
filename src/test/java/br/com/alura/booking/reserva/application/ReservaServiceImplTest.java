@@ -19,6 +19,7 @@ import br.com.alura.booking.reserva.api.response.ReservaResponse;
 import br.com.alura.booking.reserva.api.response.ReservaResumoResponse;
 import br.com.alura.booking.reserva.domain.MotivoHistorico;
 import br.com.alura.booking.reserva.domain.Reserva;
+import br.com.alura.booking.reserva.domain.ReservaFinalizada;
 import br.com.alura.booking.reserva.domain.ReservaHistorico;
 import br.com.alura.booking.reserva.domain.StatusReserva;
 import br.com.alura.booking.sala.application.SalaRepository;
@@ -36,17 +37,20 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReservaServiceImplTest {
 
     private static final LocalDateTime INICIO = LocalDateTime.of(2026, 12, 15, 10, 0);
     private static final LocalDateTime FIM = LocalDateTime.of(2026, 12, 15, 11, 0);
+    private static final LocalDateTime AGORA = FIM.plusSeconds(2);
 
     @Mock
     private SalaRepository salaRepository;
@@ -59,6 +63,9 @@ class ReservaServiceImplTest {
 
     @Mock
     private ReservaHistoricoRepository reservaHistoricoRepository;
+
+    @Mock
+    private ApplicationEventPublisher publicador;
 
     @InjectMocks
     private ReservaServiceImpl reservaService;
@@ -440,6 +447,110 @@ class ReservaServiceImplTest {
 
         verify(reservaRepository, never()).buscaReservaPorId(any());
         verify(reservaRepository, never()).salva(any());
+    }
+
+    // ---------- processaReservaVencida ----------
+
+    /** Reserva ATIVO com ids definidos (usuário 1, sala 2, reserva 5), para conferir o evento. */
+    private static Reserva ativaComIds() {
+        Reserva reserva = ativa();
+        ReflectionTestUtils.setField(reserva, "id", 5L);
+        ReflectionTestUtils.setField(reserva.getSala(), "id", 2L);
+        ReflectionTestUtils.setField(reserva.getUsuario(), "id", 1L);
+        return reserva;
+    }
+
+    @Test
+    void processaReservaVencidaFinalizaAAtivaGravaOHistoricoEPublicaOEvento() {
+        Reserva reserva = ativaComIds();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.processaReservaVencida(5L, AGORA);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.FINALIZADO);
+        verify(reservaRepository).salva(reserva);
+        var historico = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository).registraReservaHistorico(historico.capture());
+        assertThat(historico.getValue().getStatusAnterior()).isEqualTo(StatusReserva.ATIVO);
+        assertThat(historico.getValue().getStatusNovo()).isEqualTo(StatusReserva.FINALIZADO);
+        assertThat(historico.getValue().getMotivo()).isEqualTo(MotivoHistorico.FINALIZACAO_AUTOMATICA);
+        verify(publicador).publishEvent(new ReservaFinalizada(5L, 2L, 1L, AGORA));
+    }
+
+    @Test
+    void processaReservaVencidaCancelaAPendenteSemConfirmacaoSemPublicarEvento() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.processaReservaVencida(5L, AGORA);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        verify(reservaRepository).salva(reserva);
+        var historico = ArgumentCaptor.forClass(ReservaHistorico.class);
+        verify(reservaHistoricoRepository).registraReservaHistorico(historico.capture());
+        assertThat(historico.getValue().getStatusAnterior()).isEqualTo(StatusReserva.PENDENTE);
+        assertThat(historico.getValue().getStatusNovo()).isEqualTo(StatusReserva.CANCELADO);
+        assertThat(historico.getValue().getMotivo()).isEqualTo(MotivoHistorico.EXPIRACAO_SEM_CONFIRMACAO);
+        verifyNoInteractions(publicador);
+    }
+
+    @Test
+    void processaReservaVencidaNaoFazNadaComReservaJaFinalizada() {
+        Reserva reserva = ativa();
+        reserva.finalizar(FIM);
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.processaReservaVencida(5L, AGORA);
+
+        // Idempotente: rodar de novo sobre uma reserva já tratada não muda nada.
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.FINALIZADO);
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+        verifyNoInteractions(publicador);
+    }
+
+    @Test
+    void processaReservaVencidaNaoFazNadaComReservaJaCancelada() {
+        Reserva reserva = pendente();
+        reserva.cancelar();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.processaReservaVencida(5L, AGORA);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.CANCELADO);
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+        verifyNoInteractions(publicador);
+    }
+
+    @Test
+    void processaReservaVencidaRecusaAtivaCujoHorarioAindaNaoTerminou() {
+        Reserva reserva = ativa();
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        assertErro(
+                () -> reservaService.processaReservaVencida(5L, FIM.minusMinutes(1)),
+                CodigoErro.RESERVA_AINDA_NAO_TERMINOU);
+
+        assertThat(reserva.getStatus()).isEqualTo(StatusReserva.ATIVO);
+        verify(reservaRepository, never()).salva(any());
+        verify(reservaHistoricoRepository, never()).registraReservaHistorico(any());
+        verifyNoInteractions(publicador);
+    }
+
+    @Test
+    void processaReservaVencidaTravaASalaAntesDeLerAReserva() {
+        Reserva reserva = pendente();
+        when(reservaRepository.buscaIdDaSalaDaReserva(5L)).thenReturn(2L);
+        when(reservaRepository.buscaReservaPorId(5L)).thenReturn(reserva);
+
+        reservaService.processaReservaVencida(5L, AGORA);
+
+        // Mesma fila de confirmar e cancelar: toda mudança de status da sala passa pelo lock da sala.
+        InOrder ordem = inOrder(reservaRepository, salaRepository);
+        ordem.verify(reservaRepository).buscaIdDaSalaDaReserva(5L);
+        ordem.verify(salaRepository).travaSala(2L);
+        ordem.verify(reservaRepository).buscaReservaPorId(5L);
     }
 
     // ---------- historicoReserva ----------

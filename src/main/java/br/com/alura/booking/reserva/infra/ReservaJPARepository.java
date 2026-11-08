@@ -20,18 +20,20 @@ public interface ReservaJPARepository extends JpaRepository<Reserva, Long>, JpaS
     @EntityGraph(attributePaths = {"usuario", "sala"})
     Page<Reserva> findAll(Specification<Reserva> spec, Pageable pageable);
 
-    /** Só o id da sala da reserva. Devolve um valor simples, sem carregar a reserva para o JPA. */
+    /**
+     * Só o id da sala da reserva. Devolve um valor simples, sem carregar a reserva para o JPA.
+     */
     @Query("select r.sala.id from Reserva r where r.id = :id")
     Optional<Long> buscaIdDaSala(@Param("id") Long id);
 
     @Query("""
-        select count(r) > 0 from Reserva r
-        where r.sala.id = :salaId
-          and r.status = :status
-          and r.id <> :id
-          and r.inicio < :fim
-          and r.fim > :inicio
-        """)
+            select count(r) > 0 from Reserva r
+            where r.sala.id = :salaId
+              and r.status = :status
+              and r.id <> :id
+              and r.inicio < :fim
+              and r.fim > :inicio
+            """)
     boolean existeSobreposta(
             @Param("status") StatusReserva statusReserva,
             @Param("salaId") Long salaId,
@@ -40,17 +42,27 @@ public interface ReservaJPARepository extends JpaRepository<Reserva, Long>, JpaS
             @Param("fim") LocalDateTime fim);
 
     @Query("""
-        select r from Reserva r
-        where r.sala.id = :salaId
-          and r.status = :status
-          and r.id <> :id
-          and r.inicio < :fim
-          and r.fim > :inicio
-        """)
+            select r from Reserva r
+            where r.sala.id = :salaId
+              and r.status = :status
+              and r.id <> :id
+              and r.inicio < :fim
+              and r.fim > :inicio
+            """)
     List<Reserva> listaSobrepostas(
             @Param("status") StatusReserva statusReserva,
             @Param("salaId") Long salaId,
             @Param("id") Long id,
             @Param("inicio") LocalDateTime inicio,
             @Param("fim") LocalDateTime fim);
+
+    @Query("""
+            select r.id
+              from Reserva r
+             where r.status = :status
+               and r.fim   <= :agora
+             order by r.fim asc
+            """)
+    List<Long> buscaIdReservaVencidaPorStatus(
+            @Param("agora") LocalDateTime agora, @Param("status") StatusReserva status, Pageable pageable);
 }

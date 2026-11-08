@@ -6,10 +6,12 @@ import br.com.alura.booking.reserva.domain.Reserva;
 import br.com.alura.booking.reserva.domain.StatusReserva;
 import br.com.alura.booking.shared.exception.CodigoErro;
 import br.com.alura.booking.shared.exception.NegocioException;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -88,5 +90,16 @@ public class ReservaInfraRepository implements ReservaRepository {
 
         log.debug("[finish] - {} - listaPendentesSobrepostas", getClass().getSimpleName());
         return listaReservasPendentes;
+    }
+
+    @Override
+    public List<Long> buscaIdReservaVencidaPorStatus(LocalDateTime agora, StatusReserva status, int limite) {
+        log.debug("[start] - {} - buscaIdReservaVencidaPorStatus", getClass().getSimpleName());
+
+        List<Long> listaReservaId =
+                reservaJPARepository.buscaIdReservaVencidaPorStatus(agora, status, PageRequest.of(0, limite));
+
+        log.debug("[finish] - {} - buscaIdReservaVencidaPorStatus", getClass().getSimpleName());
+        return listaReservaId;
     }
 }

@@ -38,3 +38,8 @@ management:
       group:
         readiness:
           include: readinessState,db
+booking:
+  job:
+    finalizacao:
+      intervalo: 60000
+      tamanho-lote: 10
